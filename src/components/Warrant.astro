@@ -14,7 +14,7 @@ const AXES = [
     name: "Independence",
     tone: "signal",
     value: "no",
-    note: "one agent wrote the code and the check",
+    note: "same author as the code",
   },
   {
     key: "relevance",
@@ -22,7 +22,7 @@ const AXES = [
     name: "Relevance",
     tone: "plain",
     value: "5 of 5",
-    note: "the check opened every file that changed",
+    note: "opened every file that changed",
   },
   {
     key: "discrimination",
@@ -30,7 +30,7 @@ const AXES = [
     name: "Discrimination",
     tone: "quiet",
     value: "unknown",
-    note: "measured only when the check itself changed",
+    note: "measured only when the check changes",
   },
 ];
 
@@ -44,8 +44,7 @@ const AUTHOR = "the same agent";
   <header class="max-w-[460px] pb-6">
     <h2 class="card-h">Green, with a warrant</h2>
     <p class="card-lede">
-      An agent can write both the code and its check, so sdt labels every verdict and never blocks
-      your build.
+      An agent can write both the code and its check, so sdt labels every verdict.
     </p>
   </header>
 

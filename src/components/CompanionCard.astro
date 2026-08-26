@@ -6,19 +6,15 @@ import "../styles/components/capture.css";
 const FACTS = [
   {
     icon: "lucide:activity",
-    text: "Automatic on macOS through launchd. <code>sdt watch</code> on Linux.",
+    text: "Automatic on macOS, <code>sdt watch</code> on Linux",
   },
   {
     icon: "lucide:infinity",
-    text: "No staging area, no stash, no save you can forget.",
-  },
-  {
-    icon: "lucide:rotate-ccw",
-    text: "A rewind captures the state you are leaving first.",
+    text: "No staging area, no stash",
   },
   {
     icon: "lucide:undo-2",
-    text: "<code>sdt undo</code> reverses any operation, repo wide.",
+    text: "<code>sdt undo</code> reverses any operation",
   },
 ];
 
@@ -40,7 +36,7 @@ const READOUT = "14:02 · 39 minutes back";
     <header class="capture-copy">
       <h2 class="card-h" style="--i: 0">Nothing is ever unsaved</h2>
       <p class="card-lede" style="--i: 1">
-        Capture starts at <code>sdt init</code> and never stops. The working copy is always a change.
+        Capture starts at <code>sdt init</code> and never stops.
       </p>
 
       <ul class="capture-facts" role="list">
@@ -57,7 +53,7 @@ const READOUT = "14:02 · 39 minutes back";
 
     <div
       class="tape"
-      style={`--i: 6; --head-offset: ${HEAD_OFFSET}; --pin-offset: ${PIN_OFFSET}`}
+      style={`--i: 5; --head-offset: ${HEAD_OFFSET}; --pin-offset: ${PIN_OFFSET}`}
       data-tape
     >
       <div class="tape-status">

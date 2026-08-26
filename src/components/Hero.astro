@@ -1,0 +1,69 @@
+---
+import BuyButton from "./BuyButton.astro";
+import Logo from "./Logo.astro";
+import "../styles/components/hero-canvas.css";
+---
+
+<div class="mx-auto w-full max-w-[1560px] px-5 sm:px-8 lg:px-14">
+  <section
+    data-wave-host
+    data-keep-dark
+    class="group relative isolate overflow-hidden rounded-card"
+    style="background: radial-gradient(125% 150% at 16% 52%, #14b866 0%, #0a8f4d 46%, #06663a 100%);"
+  >
+    <!-- The history field. It repaints the gradient above as its own base, so
+         the inline style is both the pre-paint look and the fallback when
+         WebGL is unavailable. -->
+    <canvas
+      data-wave
+      class="wave-canvas history-canvas absolute inset-0 h-full w-full"
+      aria-hidden="true"></canvas>
+
+    <!-- subtle inner border + bottom vignette for text legibility -->
+    <div
+      class="pointer-events-none absolute inset-0 z-10 rounded-card ring-1 ring-inset ring-white/10"
+    >
+    </div>
+
+    <div
+      class="relative z-20 flex min-h-[440px] flex-col justify-between gap-10 p-6 sm:min-h-[500px] sm:p-8"
+    >
+      <h1
+        class="max-w-[900px] text-[clamp(42px,6.9vw,66px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_1px_12px_rgba(0,50,25,0.25)]"
+        data-hero-headline
+      >
+        Rewind to the last state of your code that actually passed.
+      </h1>
+
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="mb-3 flex flex-col gap-6">
+          <Logo class="size-9 text-white drop-shadow-[0_2px_8px_rgba(0,50,25,0.35)]" />
+          <span class="text-[20px] font-semibold tracking-[-0.02em] text-white">superdetermine</span
+          >
+        </div>
+
+        <BuyButton variant="hero" />
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  import { initWaveCanvas } from "../scripts/waveCanvas";
+  import { initHeroHeadline } from "../scripts/heroHeadline";
+
+  const teardowns: Array<() => void> = [];
+
+  document
+    .querySelectorAll<HTMLCanvasElement>("canvas[data-wave].history-canvas")
+    .forEach((canvas) => {
+      const host = canvas.closest<HTMLElement>("[data-wave-host]") ?? canvas.parentElement;
+      if (host) teardowns.push(initWaveCanvas(canvas, host));
+    });
+
+  initHeroHeadline();
+
+  document.addEventListener("astro:before-swap", () => {
+    while (teardowns.length) teardowns.pop()?.();
+  });
+</script>

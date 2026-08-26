@@ -1,0 +1,101 @@
+---
+import "../styles/components/moments.css";
+
+/**
+ * The field is one working session. Every cell is a captured state of the
+ * worktree, oldest at the left, filling column by column as work continues.
+ * The left of the field has already been graded; the right is still ungraded,
+ * and sweeping a pointer across it runs the check on those states. Verdicts are
+ * keyed by content, so a state only ever resolves to one answer.
+ */
+const ROWS = 9;
+const COLS = 26;
+const TOTAL = ROWS * COLS;
+
+/** Everything before this has a verdict on first paint. */
+const GRADED = ROWS * 16;
+
+function hash(a: number, b: number): number {
+  let h = 0x811c9dc5;
+  for (const part of [a + 7, b * 131 + 3, a * 31 + b + 11]) {
+    h = Math.imul(h ^ part, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+/**
+ * A check that fails tends to keep failing for a while, so red arrives in runs
+ * rather than as single specks. Column granularity gives those runs a shape
+ * without turning half the field red.
+ */
+function verdictFor(index: number, round: number): "green" | "red" {
+  const column = Math.floor(index / ROWS);
+  const broken = hash(column, round + 1) % 7 === 0;
+  const h = hash(index, round);
+  if (broken) return h % 9 === 0 ? "green" : "red";
+  return h % 31 === 0 ? "red" : "green";
+}
+
+const cells = Array.from({ length: TOTAL }, (_, i) => {
+  const next = verdictFor(i, 0);
+  return {
+    i,
+    verdict: i < GRADED ? next : "ungraded",
+    next,
+    base: (hash(i, 99) % 1000) / 1000,
+  };
+});
+
+let head = 0;
+for (const cell of cells) if (cell.verdict === "green") head = cell.i;
+---
+
+<article class="relative flex min-h-[273px] flex-col overflow-hidden rounded-card bg-surface">
+  <header class="max-w-[460px] px-5 pb-6 pt-5 sm:px-6 sm:pt-6">
+    <h2 class="card-h">Every state, graded</h2>
+    <p class="card-lede">
+      sdt captures your worktree continuously and grades it, so <code>sdt green</code> returns the last
+      state that passed.
+    </p>
+  </header>
+
+  <div
+    class="mfield"
+    data-moment-field
+    data-rows={ROWS}
+    data-cols={COLS}
+    style={`--rows: ${ROWS}; --cols: ${COLS}`}
+    role="group"
+    aria-label="Captured states of the working tree, oldest first. Graded green or red, the rest ungraded."
+  >
+    <div class="mfield-grid" data-moment-grid>
+      {
+        cells.map((cell) => (
+          <span
+            class="mcell"
+            data-i={cell.i}
+            data-verdict={cell.verdict}
+            data-next={cell.next}
+            data-head={cell.i === head ? "" : null}
+            style={`--i: ${cell.i}; --base: ${cell.base}`}
+          >
+            <i />
+          </span>
+        ))
+      }
+    </div>
+  </div>
+</article>
+
+<script>
+  import { initMomentField } from "../scripts/momentField";
+
+  const teardowns: Array<() => void> = [];
+  document.querySelectorAll<HTMLElement>("[data-moment-field]").forEach((root) => {
+    teardowns.push(initMomentField(root));
+  });
+
+  document.addEventListener("astro:before-swap", () => {
+    while (teardowns.length) teardowns.pop()?.();
+  });
+</script>

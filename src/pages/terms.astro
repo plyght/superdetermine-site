@@ -1,0 +1,46 @@
+---
+import Legal from "../layouts/Legal.astro";
+
+const sections = [
+  {
+    id: "licence",
+    heading: "The licence governs",
+    body: "superdetermine is open source under the Apache License 2.0. That licence is the actual agreement covering your use, modification, and redistribution of the software, and it is what to read if the two disagree with each other: github.com/plyght/superdetermine/blob/master/LICENSE",
+  },
+  {
+    id: "as-is",
+    heading: "Provided as-is",
+    body: "The software comes with no warranty of any kind, express or implied. Nobody is liable for damage arising from its use. This is stated in full in sections 7 and 8 of the licence.",
+  },
+  {
+    id: "early",
+    heading: "It is early software",
+    body: "superdetermine is under active development. Commands, flags, output formats, and on-disk formats may change between versions, sometimes without a migration path. Pin a version if you need stability.",
+  },
+  {
+    id: "your-data",
+    heading: "Your data is yours to look after",
+    body: "sdt operates on files on your machine. You are responsible for your own backups and for verifying that a destructive operation did what you expected. Keep copies of anything you cannot afford to lose.",
+  },
+  {
+    id: "website",
+    heading: "This website",
+    body: "The content here is informational and describes the project as it currently stands. It may be out of date or incomplete, and it is not a promise that any feature exists or will continue to.",
+  },
+  {
+    id: "changes",
+    heading: "Changes",
+    body: "This page may be revised as the project changes. The date at the top reflects the most recent revision. Issues and corrections are welcome at github.com/plyght/superdetermine/issues",
+  },
+];
+---
+
+<Legal
+  title="Terms · superdetermine"
+  description="superdetermine is an individual open-source project released under Apache 2.0."
+  heading="Terms"
+  intro="Last updated 26 August 2026."
+  highlightHeading="Apache 2.0, as-is, no warranty."
+  highlightBody="superdetermine is an individual open-source project. The Apache 2.0 licence is the governing document; everything below is a plain-language summary of what that means in practice."
+  sections={sections}
+/>

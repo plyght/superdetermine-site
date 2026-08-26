@@ -1,0 +1,25 @@
+---
+import { linkify } from "../lib/linkify";
+
+interface Props {
+  text: string;
+  class?: string;
+}
+
+const { text, class: className } = Astro.props;
+const segments = linkify(text);
+---
+
+<p class={className}>
+  {
+    segments.map((segment) =>
+      segment.kind === "link" ? (
+        <a class="prose-link" href={segment.href} rel="noopener">
+          {segment.label}
+        </a>
+      ) : (
+        segment.value
+      ),
+    )
+  }
+</p>

@@ -1,0 +1,119 @@
+.buy-btn {
+  --inset: 16px;
+  --apple: 24px;
+  --gap: 8px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  isolation: isolate;
+  padding-left: calc(var(--inset) + var(--apple) + var(--gap));
+  padding-right: var(--inset);
+  border-radius: 16px;
+  background: #20201f;
+  color: #fff;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.buy-btn--md {
+  height: 56px;
+  font-size: 16px;
+}
+
+.buy-btn--lg {
+  --inset: 18px;
+  height: 60px;
+  font-size: 16px;
+}
+
+.buy-btn--white {
+  background: var(--color-white);
+  color: var(--color-black);
+}
+
+.buy-label {
+  display: inline-block;
+  transition: transform 0.42s var(--ease);
+}
+
+.buy-label strong {
+  font-weight: 700;
+}
+
+.buy-apple {
+  position: absolute;
+  left: var(--inset);
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--apple);
+  transform: translateY(-50%);
+  transition:
+    opacity 0.3s ease,
+    transform 0.42s var(--ease);
+}
+
+.buy-apple svg {
+  width: 20px;
+  height: 20px;
+  transform: translateY(-0.5px);
+}
+
+.buy-arrow {
+  position: absolute;
+  right: calc(var(--inset) - 2px);
+  top: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  opacity: 0;
+  transform: translate(180%, -50%);
+  transition:
+    opacity 0.3s ease,
+    transform 0.42s var(--ease);
+}
+
+.buy-btn--white .buy-arrow {
+  color: var(--color-black);
+}
+
+.buy-arrow svg {
+  width: 23px;
+  height: 23px;
+  display: block;
+}
+
+.buy-btn:where(:hover, :focus-visible) .buy-label {
+  transform: translate(calc(-1 * (var(--apple) + var(--gap))));
+}
+
+.buy-btn:where(:hover, :focus-visible) .buy-apple {
+  opacity: 0;
+  transform: translate(-180%, -50%);
+}
+
+.buy-btn:where(:hover, :focus-visible) .buy-arrow {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buy-label,
+  .buy-apple,
+  .buy-arrow {
+    transition: opacity 0.2s ease;
+  }
+  .buy-btn:where(:hover, :focus-visible) .buy-label {
+    transform: none;
+  }
+  .buy-btn:where(:hover, :focus-visible) .buy-apple {
+    transform: translate(-180%, -50%);
+  }
+  .buy-btn:where(:hover, :focus-visible) .buy-arrow {
+    transform: translateY(-50%);
+  }
+}

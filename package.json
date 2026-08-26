@@ -1,0 +1,42 @@
+{
+  "name": "superdetermine-site",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "og": "bun scripts/generate-og.tsx",
+    "astro": "astro",
+    "format": "prettier --write \"src/**/*.{astro,ts,css}\"",
+    "format:check": "prettier --check \"src/**/*.{astro,ts,css}\"",
+    "lint": "astro check --minimumSeverity warning",
+    "typecheck": "astro check --minimumSeverity error",
+    "test": "bun test",
+    "check": "bun run format:check && bun run typecheck && bun run build"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "@iconify-json/lucide": "^1.2.126",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.2.1",
+    "astro-icon": "^1.2.0",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/react": "^6.0.4",
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/bun": "^1.3.14",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "agentation": "^3.0.2",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "satori": "^0.33.4",
+    "typescript": "^6"
+  }
+}

@@ -1,0 +1,19 @@
+.header-brand-text {
+  opacity: 0.16;
+  filter: blur(9px);
+  transition:
+    filter 0.52s cubic-bezier(0.19, 1, 0.22, 1),
+    opacity 0.52s cubic-bezier(0.19, 1, 0.22, 1);
+  will-change: filter, opacity;
+}
+
+.header-brand:is(:hover, :focus-visible) .header-brand-text {
+  opacity: 0.5;
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-brand-text {
+    transition-duration: 1ms;
+  }
+}

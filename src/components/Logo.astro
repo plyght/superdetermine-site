@@ -1,0 +1,24 @@
+---
+import { MARK_PATH, MARK_VIEWBOX } from "../brand";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = "size-[22px] text-white" } = Astro.props;
+---
+
+<!-- The explicit width/height keep the unlayered
+     `:where(svg:not([width]):not([height]))` first-paint fallback from
+     overriding the sizing utilities, which live in @layer utilities. -->
+<svg
+  viewBox={MARK_VIEWBOX}
+  width="400"
+  height="400"
+  fill="none"
+  class={className}
+  aria-hidden="true"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path d={MARK_PATH} fill="currentColor" fill-rule="evenodd"></path>
+</svg>

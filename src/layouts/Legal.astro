@@ -1,0 +1,54 @@
+---
+import Footer from "../components/Footer.astro";
+import "../styles/components/page-styles.css";
+import Base from "./Base.astro";
+import BottomCta from "../components/BottomCta.astro";
+import Prose from "../components/Prose.astro";
+
+export interface LegalSection {
+  id: string;
+  heading: string;
+  body: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  heading: string;
+  intro: string;
+  highlightHeading: string;
+  highlightBody: string;
+  sections: LegalSection[];
+}
+
+const { title, description, heading, intro, highlightHeading, highlightBody, sections } =
+  Astro.props;
+---
+
+<Base title={title} description={description} intro>
+  <main id="main" class="flex flex-col gap-4 pt-2">
+    <section class="mx-auto w-full max-w-[720px] px-5 pt-10 sm:px-8 sm:pt-16">
+      <h1 class="legal-item card-h">{heading}</h1>
+      <p class="legal-item card-lede">{intro}</p>
+
+      <div class="legal-item legal-highlight mt-8 rounded-card bg-surface p-5 sm:p-6">
+        <h2>{highlightHeading}</h2>
+        <Prose text={highlightBody} />
+      </div>
+
+      <div class="legal-item legal-details mt-8 sm:mt-10">
+        {
+          sections.map((section) => (
+            <section class="legal-section" aria-labelledby={section.id}>
+              <h2 id={section.id}>{section.heading}</h2>
+              <Prose text={section.body} />
+            </section>
+          ))
+        }
+      </div>
+    </section>
+
+    <BottomCta />
+    <Footer />
+  </main>
+</Base>

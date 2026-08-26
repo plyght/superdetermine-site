@@ -1,0 +1,94 @@
+---
+import { Icon } from "astro-icon/components";
+import "../styles/components/warrant.css";
+
+/**
+ * Three questions sdt answers about a passing check. Independence is the one
+ * the reader can move: the author of the check is the variable that decides it,
+ * so the card lets them change it and watch the verdict follow.
+ */
+const AXES = [
+  {
+    key: "independence",
+    icon: "lucide:users",
+    name: "Independence",
+    tone: "signal",
+    value: "no",
+    note: "same author",
+  },
+  {
+    key: "relevance",
+    icon: "lucide:file-search",
+    name: "Relevance",
+    tone: "plain",
+    value: "5 of 5",
+    note: "every changed file",
+  },
+  {
+    key: "discrimination",
+    icon: "lucide:git-compare",
+    name: "Discrimination",
+    tone: "quiet",
+    value: "unknown",
+    note: "only when the check changes",
+  },
+];
+
+/** The starting author, and the label the swap control shows for it. */
+const AUTHOR = "the same agent";
+---
+
+<article
+  class="relative flex min-h-[273px] flex-col overflow-hidden rounded-card bg-surface p-5 sm:p-6"
+>
+  <header class="max-w-[460px] pb-6">
+    <h2 class="card-h">Green, with a warrant</h2>
+    <p class="card-lede">An agent can write both the code and its check.</p>
+  </header>
+
+  <div class="wr mt-auto" data-warrant>
+    <p class="wr-ask" style="--i: 0">
+      <span>The check was written by</span>
+      <button
+        type="button"
+        class="wr-swap"
+        data-warrant-swap
+        aria-label={`Who wrote the check: ${AUTHOR}. Activate to change it.`}
+      >
+        <span data-warrant-author>{AUTHOR}</span>
+        <Icon name="lucide:arrow-left-right" aria-hidden="true" />
+      </button>
+      <span class="wr-meta">no model, 3 ms</span>
+    </p>
+
+    <ul class="wr-axes" role="list">
+      {
+        AXES.map((axis, i) => (
+          <li class="wr-axis" data-axis={axis.key} data-tone={axis.tone} style={`--i: ${i + 1}`}>
+            <Icon class="wr-icon" name={axis.icon} aria-hidden="true" />
+            <span class="wr-name">{axis.name}</span>
+            <span class="wr-note" data-warrant-note>
+              {axis.note}
+            </span>
+            <span class="wr-value" data-warrant-value>
+              {axis.value}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</article>
+
+<script>
+  import { initWarrant } from "../scripts/warrant";
+
+  const teardowns: Array<() => void> = [];
+  document.querySelectorAll<HTMLElement>("[data-warrant]").forEach((root) => {
+    teardowns.push(initWarrant(root));
+  });
+
+  document.addEventListener("astro:before-swap", () => {
+    while (teardowns.length) teardowns.pop()?.();
+  });
+</script>

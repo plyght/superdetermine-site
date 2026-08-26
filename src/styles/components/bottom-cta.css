@@ -1,0 +1,13 @@
+.bottom-cta {
+  isolation: isolate;
+}
+
+.bottom-cta-mark {
+  bottom: -116px;
+}
+
+@media (min-width: 640px) {
+  .bottom-cta-mark {
+    bottom: -200px;
+  }
+}

@@ -1,0 +1,75 @@
+---
+import Logo from "./Logo.astro";
+
+const year = 2026;
+
+/**
+ * The homepage sections are already in the nav, and this is a one page site, so
+ * repeating them here would just be the same links twice. What belongs at the
+ * bottom is the things the nav has no room for.
+ */
+const links = [
+  { href: "https://github.com/plyght/superdetermine", label: "GitHub" },
+  { href: "https://github.com/plyght/superdetermine/issues", label: "Issues" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
+];
+---
+
+<footer class="relative z-10 -mt-24 sm:-mt-28">
+  <div
+    class="mx-auto flex w-full max-w-[1560px] flex-col items-center justify-between gap-5 px-5 pb-9 text-[13px] tracking-[-0.01em] text-faint sm:flex-row sm:px-8 lg:px-14"
+  >
+    <a class="footer-brand" href="#top" aria-label="Back to top">
+      <Logo class="size-[15px]" />
+      <span>superdetermine</span>
+      <span class="footer-year">{year}</span>
+    </a>
+
+    <nav class="footer-links" aria-label="More">
+      {
+        links.map((link) => (
+          <a class="footer-link" href={link.href}>
+            {link.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color 0.16s ease;
+  }
+
+  .footer-brand:hover {
+    color: var(--color-fg);
+  }
+
+  .footer-year {
+    color: var(--color-faint);
+  }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 22px;
+  }
+
+  .footer-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.16s ease;
+  }
+
+  .footer-link:hover {
+    color: var(--color-fg);
+  }
+</style>

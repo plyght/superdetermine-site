@@ -1,0 +1,55 @@
+---
+import "../styles/components/buy-button.css";
+
+interface Props {
+  size?: "md" | "lg";
+  variant?: "hero" | "white" | "compare";
+  label?: string;
+  href?: string;
+  class?: string;
+}
+
+const {
+  size = "md",
+  variant,
+  label = "Download for macOS",
+  href = "https://github.com/plyght/superdetermine/releases",
+  class: className = "",
+} = Astro.props;
+
+const classes = ["buy-btn", `buy-btn--${size}`, variant ? `buy-btn--${variant}` : "", className]
+  .filter(Boolean)
+  .join(" ");
+---
+
+<a href={href} class={classes} data-wave-trigger data-buy-btn>
+  <span class="buy-apple" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3v12"></path>
+      <path d="m7 10 5 5 5-5"></path>
+      <path d="M20 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2"></path>
+    </svg>
+  </span>
+
+  <span class="buy-label">{label}</span>
+
+  <span class="buy-arrow" aria-hidden="true">
+    <svg viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="12" stroke="currentColor" stroke-width="1.7"></circle>
+      <path
+        d="M7.95 13h9.5M13.45 8.4l4.6 4.6-4.6 4.6"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+  </span>
+</a>

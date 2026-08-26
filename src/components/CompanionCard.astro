@@ -1,0 +1,121 @@
+---
+import { Icon } from "astro-icon/components";
+import "../styles/components/capture.css";
+
+/** Short facts under the copy, revealed in order. */
+const FACTS = [
+  {
+    icon: "lucide:activity",
+    text: "Automatic on macOS, <code>sdt watch</code> on Linux",
+  },
+  {
+    icon: "lucide:infinity",
+    text: "No staging area, no stash",
+  },
+  {
+    icon: "lucide:undo-2",
+    text: "<code>sdt undo</code> reverses any operation",
+  },
+];
+
+/**
+ * One mark per captured state, every sixth one taller, so the whole lattice
+ * repeats every six marks and the flow can wrap on an exact multiple of the
+ * pitch. Sixty four covers the widest stage plus six pitches of overscan at
+ * each end.
+ */
+const MARKS = Array.from({ length: 64 }, (_, k) => k);
+
+/**
+ * The still frame the page ships with: the playhead parked seven minutes back,
+ * every state it skipped past still lit on the tape, and the tape still
+ * recording at the live edge. The script picks it up from here.
+ */
+const HEAD_OFFSET = 22;
+const PIN_OFFSET = 4;
+const READOUT = "7 min back";
+---
+
+<section
+  class="capture-section mx-auto w-full max-w-[1560px] px-5 sm:px-8 lg:px-14"
+  style="animation-fill-mode: backwards"
+>
+  <article class="capture-card rounded-card bg-surface">
+    <header class="capture-copy">
+      <h2 class="card-h" style="--i: 0">Nothing is ever unsaved</h2>
+      <p class="card-lede" style="--i: 1">
+        Capture starts at <code>sdt init</code> and never stops.
+      </p>
+
+      <ul class="capture-facts" role="list">
+        {
+          FACTS.map((fact, i) => (
+            <li style={`--i: ${i + 2}`}>
+              <Icon name={fact.icon} aria-hidden="true" />
+              <span set:html={fact.text} />
+            </li>
+          ))
+        }
+      </ul>
+    </header>
+
+    <div
+      class="tape"
+      style={`--i: 5; --head-offset: ${HEAD_OFFSET}; --pin-offset: ${PIN_OFFSET}`}
+      data-tape
+    >
+      <div
+        class="tape-stage"
+        data-stage
+        tabindex="0"
+        role="slider"
+        aria-orientation="horizontal"
+        aria-label="Position on the capture tape"
+        aria-valuemin="0"
+        aria-valuemax="40"
+        aria-valuenow={HEAD_OFFSET}
+        aria-valuetext={`${READOUT}, with ${HEAD_OFFSET} captured states still on the tape ahead of here`}
+      >
+        <div class="tape-baseline" aria-hidden="true"></div>
+
+        <div class="tape-marks" data-marks aria-hidden="true">
+          {MARKS.map((k) => <i class={k % 6 === 0 ? "is-major" : undefined} style={`--k: ${k}`} />)}
+        </div>
+
+        <div class="tape-kept" data-kept aria-hidden="true">
+          <div class="tape-marks is-lit" data-lit>
+            {
+              MARKS.map((k) => (
+                <i class={k % 6 === 0 ? "is-major" : undefined} style={`--k: ${k}`} />
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="tape-edge" aria-hidden="true"></div>
+
+        <div class="tape-pin" data-pin aria-hidden="true">
+          <Icon name="lucide:bookmark" />
+        </div>
+
+        <div class="tape-playhead" data-playhead aria-hidden="true">
+          <span class="tape-handle" data-handle>
+            <Icon name="lucide:grip-vertical" />
+            <b data-readout>{READOUT}</b>
+          </span>
+        </div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<script>
+  import { initCaptureTape } from "../scripts/companionScroll";
+
+  const teardowns: Array<() => void> = [];
+  teardowns.push(initCaptureTape());
+
+  document.addEventListener("astro:before-swap", () => {
+    while (teardowns.length) teardowns.pop()?.();
+  });
+</script>

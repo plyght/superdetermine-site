@@ -1,0 +1,81 @@
+---
+import FaqItem from "./FaqItem.astro";
+import "../styles/components/faq.css";
+
+const FAQS = [
+  {
+    question: "What is a moment, and how is it different from a change?",
+    answer:
+      "A moment is a content-addressed state of your working tree, captured on its own with a stable id and a timestamp. It is not a commit and never appears in sdt log. A change is the thing you name yourself with sdt save.",
+  },
+  {
+    question: "Does it replace git?",
+    answer:
+      "Yes. sdt is its own version control system, with its own object store, its own history model, and its own commands. The git interop is bidirectional and lossless, so full history, branches, and tags move both ways and sdt export <dir> writes a plain git repo whenever you want one. Adoption is reversible because of that interop, not because sdt is git underneath.",
+  },
+  {
+    question: "How does capture behave on Linux?",
+    answer:
+      "Automatic capture is macOS only, started by launchd after a file changes and stopping again when it is done. On Linux you run sdt watch in a terminal, which does the same work for as long as it runs.",
+  },
+  {
+    question: "What does grading cost me?",
+    answer:
+      'Nothing until you say what to run with sdt config checks.full "<command>". After that each check runs inside a throwaway copy-on-write clone, so your worktree is never touched and your terminal never waits.',
+  },
+  {
+    question: "What is a warrant, and why is a green not enough?",
+    answer:
+      "An agent can write both the code and the test, in which case a green only proves it agrees with itself. So sdt labels every verdict with a warrant on three axes: independence, relevance, and discrimination. Relevance comes from file access times and is a conservative over-approximation off APFS, and discrimination is measured only when the check itself changed, otherwise reading unknown.",
+  },
+  {
+    question: "What does sdt record that git does not?",
+    answer:
+      "git history is a sequence of commits, and a commit is too coarse a unit to answer which state broke this, which is why bisect has to go searching after a failure. sdt records every captured state with a graded verdict attached, so sdt green returns the last one that passed. Two history models, not a faster search.",
+  },
+  {
+    question: "Is my code sent anywhere?",
+    answer:
+      "No. There is no account, no server, and no telemetry. Sharing is peer to peer, and the optional relay is one you run yourself, which cannot read what passes through it.",
+  },
+  {
+    question: "What happens to secrets in a captured file?",
+    answer:
+      "sdt seal encrypts a file in place and records it in .sdtsealed, the manifest of what is sealed and who can read it. Only the ciphertext is captured and shared. sdt unseal writes the plaintext back out for anyone holding a key.",
+  },
+  {
+    question: "How do I install it, and is it stable?",
+    answer:
+      "Take a binary from GitHub Releases, then run sdt update to update in place. superdetermine is Apache-2.0 and lives at github.com/plyght/superdetermine. It is early and opinionated, and interfaces may still change.",
+  },
+];
+---
+
+<section
+  id="faq"
+  class="mx-auto w-full max-w-[1560px] scroll-mt-16 px-5 sm:px-8 lg:px-14"
+  aria-labelledby="faq-title"
+  data-faq-reveal
+>
+  <div class="mx-auto w-full max-w-[760px] py-14 sm:py-16">
+    <h2 id="faq-title" class="card-h faq-reveal" style="--faq-i: 0">Frequently asked questions</h2>
+    <p class="card-lede faq-reveal" style="--faq-i: 1">What to know before you run sdt init.</p>
+
+    <div class="mt-6 flex flex-col gap-4">
+      {FAQS.map((faq, i) => <FaqItem question={faq.question} answer={faq.answer} index={i + 2} />)}
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  document.querySelectorAll("[data-faq-reveal]").forEach(function (section) {
+    section.dataset.faqReveal = "armed";
+  });
+</script>
+
+<script>
+  import { initFaqAccordion, initFaqReveal } from "../scripts/faqAccordion";
+
+  initFaqAccordion();
+  initFaqReveal();
+</script>

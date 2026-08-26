@@ -1,0 +1,67 @@
+.faq-plus {
+  color: var(--color-fg);
+  transition: transform 0.26s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.faq-plus svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.75;
+  opacity: 0.42;
+  transition: opacity 0.2s ease;
+}
+
+details[open] .faq-plus svg,
+summary:hover .faq-plus svg {
+  opacity: 1;
+}
+
+details[open] .faq-plus {
+  transform: rotate(45deg);
+}
+
+details[open] summary {
+  color: var(--color-fg);
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary {
+  list-style: none;
+}
+
+.faq-card {
+  transition: background-color 0.2s ease;
+}
+
+.faq-card:hover,
+.faq-card[open] {
+  background-color: var(--color-surface-strong);
+}
+
+.faq-question {
+  color: var(--color-fg);
+}
+
+.faq-answer {
+  color: var(--color-muted);
+  max-width: 62ch;
+}
+
+/* Reveals resolve focus rather than position, so nothing here moves. Items sit
+   fully painted until the script marks the section ready, which keeps the
+   no-JS render correct. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-faq-reveal="armed"] .faq-reveal {
+    opacity: 0;
+    filter: blur(7px);
+  }
+
+  [data-faq-reveal="in"] .faq-reveal {
+    animation: page-reveal 0.7s var(--ease-reveal) backwards;
+    animation-delay: calc(var(--faq-i, 0) * 55ms);
+  }
+}

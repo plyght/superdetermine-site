@@ -1,0 +1,51 @@
+---
+import Legal from "../layouts/Legal.astro";
+
+const sections = [
+  {
+    id: "no-account",
+    heading: "There is no account",
+    body: "sdt has no sign-up, no login, and no user record. Nothing identifies you to us, because there is no us to be identified to. Installing the tool creates no profile and registers nothing anywhere.",
+  },
+  {
+    id: "your-repository",
+    heading: "Your repository stays on your machine",
+    body: "Your code, your history, your moments, your grades, and your uncommitted edits are written to disk on your computer and nowhere else. sdt does not upload your repository, index it, or send samples of it for analysis. There is no server holding a copy.",
+  },
+  {
+    id: "no-telemetry",
+    heading: "No telemetry",
+    body: "sdt collects no usage statistics, no crash reports, no command counts, no feature flags, and no device identifiers. There is no opt-out because there is nothing running to opt out of.",
+  },
+  {
+    id: "network",
+    heading: "The network requests that do happen",
+    body: "Three things reach the network, and each only when you ask for it. `sdt update` contacts GitHub to check for and download a newer release. `sdt attest` contacts GitHub to publish or verify an attestation. Pushing to a git remote contacts that remote. Those hosts see what any HTTPS client would show them, including your IP address, and their own privacy practices apply. If you never run those commands, sdt makes no outbound connections.",
+  },
+  {
+    id: "sharing",
+    heading: "Sharing is peer-to-peer",
+    body: "`sdt send` and `sdt mesh` move data directly between the machines involved, end-to-end encrypted. The optional relay only forwards ciphertext and cannot read what passes through it. You can run your own relay. Nothing about a share is recorded centrally.",
+  },
+  {
+    id: "website",
+    heading: "This website",
+    body: "This is a static site. It sets no analytics cookies and no advertising cookies, and it runs no third-party trackers. The only thing stored in your browser is a `sdt:theme` key in localStorage, which remembers whether you chose light or dark. Clearing site data removes it.",
+  },
+  {
+    id: "contact",
+    heading: "Questions",
+    body: "If something here is unclear or looks wrong, open an issue at github.com/plyght/superdetermine/issues. The source is public, so you can also check any of this for yourself.",
+  },
+];
+---
+
+<Legal
+  title="Privacy · superdetermine"
+  description="sdt is a local tool with no account, no server, and no telemetry."
+  heading="Privacy"
+  intro="Last updated 26 August 2026."
+  highlightHeading="No account. No server. No telemetry."
+  highlightBody="sdt is a command-line tool that runs on your machine. Your repository and your work never leave it unless you run a command that sends them somewhere."
+  sections={sections}
+/>

@@ -1,0 +1,105 @@
+/* The moment field. A flat grid of captured states that runs to the edges of
+   the card, oldest at the left. Colour is the only chrome: a verdict, or the
+   absence of one. */
+.mfield {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 164px;
+  --cell-gap: 4px;
+  --cell-radius: 2px;
+  cursor: pointer;
+}
+
+.mfield-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--cell-gap);
+}
+
+/* The cell itself is the ungraded state: present, captured, no answer yet. */
+.mcell {
+  position: relative;
+  display: block;
+  min-width: 0;
+  border-radius: var(--cell-radius);
+  background-color: color-mix(in srgb, var(--color-fg) 9%, transparent);
+  transition: background-color 0.14s var(--ease-reveal);
+}
+
+.mcell > i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: inherit;
+  background-color: var(--mcell-tone, transparent);
+  opacity: calc(0.66 + var(--base) * 0.34);
+}
+
+.mcell[data-verdict="green"] {
+  --mcell-tone: color-mix(in srgb, var(--color-green) 76%, transparent);
+}
+
+.mcell[data-verdict="red"] {
+  --mcell-tone: color-mix(in srgb, var(--color-red) 78%, transparent);
+}
+
+.mcell[data-verdict="ungraded"] > i,
+.mcell[data-pending] > i {
+  opacity: 0;
+}
+
+.mcell:hover {
+  background-color: color-mix(in srgb, var(--color-fg) 30%, transparent);
+}
+
+/* Where `sdt green` lands: the last state that passed. */
+.mcell[data-head] {
+  background-color: color-mix(in srgb, var(--color-fg) 26%, transparent);
+}
+
+.mcell[data-head] > i {
+  background-color: var(--color-fg);
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .mfield {
+    min-height: 132px;
+    --cell-gap: 3px;
+  }
+}
+
+/* The field arrives graded, and the reveal is that grading pass reading left to
+   right across the session. Nothing moves; states only come into focus. */
+@media (prefers-reduced-motion: no-preference) {
+  .mcell {
+    animation: mcell-resolve 0.5s var(--ease-reveal) both;
+    animation-delay: calc(120ms + var(--i) * 4ms);
+  }
+
+  .mcell > i {
+    transition:
+      opacity 0.36s var(--ease-reveal),
+      filter 0.36s var(--ease-reveal);
+  }
+
+  .mcell[data-pending] > i {
+    filter: blur(4px);
+  }
+}
+
+@keyframes mcell-resolve {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}

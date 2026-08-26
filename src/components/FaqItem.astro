@@ -1,0 +1,34 @@
+---
+import { Icon } from "astro-icon/components";
+import Prose from "./Prose.astro";
+import "../styles/components/faq.css";
+
+interface Props {
+  question: string;
+  answer: string;
+  index?: number;
+}
+
+const { question, answer, index = 0 } = Astro.props;
+---
+
+<details
+  class="faq-item faq-reveal faq-card overflow-hidden rounded-card bg-surface"
+  style={`--faq-i: ${index}`}
+  data-faq
+>
+  <summary
+    class="faq-question flex cursor-pointer select-none items-start justify-between gap-5 p-5 text-[15px] font-medium leading-[1.35] tracking-[-0.01em] sm:p-6"
+  >
+    <span>{question}</span>
+    <span class="faq-plus mt-[2px] block shrink-0" aria-hidden="true">
+      <Icon name="lucide:plus" />
+    </span>
+  </summary>
+  <div class="faq-body" data-faq-body>
+    <Prose
+      text={answer}
+      class="faq-answer px-5 pb-5 text-[15px] leading-[1.6] tracking-[-0.01em] sm:px-6 sm:pb-6"
+    />
+  </div>
+</details>

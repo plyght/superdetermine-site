@@ -1,0 +1,170 @@
+/* The visual is a readout of the three questions a warrant answers. Flat: the
+   weight comes from type scale and space, not from frames, and colour appears
+   once, on the one verdict the reader can change. */
+.wr {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wr-ask {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+/* One value the reader can swap, not a set of tabs: a single control holding
+   the current answer, with the swap arrows as its affordance. */
+.wr-swap {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-surface-strong);
+  color: var(--color-fg);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.16s var(--ease-reveal);
+}
+
+.wr-swap:hover {
+  background: color-mix(in srgb, var(--color-fg) 14%, transparent);
+}
+
+/* Icons are stroked paths, so a translucent colour composites each crossing
+   twice and the overlaps read as bright specks. The colour stays opaque and
+   the transparency moves to the element, which flattens the glyph first. */
+.wr-swap svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: var(--color-fg);
+  opacity: 0.5;
+}
+
+/* Right-hand meta on the question row, at body size and body colour: the card
+   carries no tier of text smaller or fainter than its notes. */
+.wr-meta {
+  margin-left: auto;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.wr-axes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wr-axis {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  column-gap: 10px;
+}
+
+/* Tones resolve through tokens so both themes follow. Only independence, the
+   axis this card actually moves, carries a hue; a measured count is plain text
+   and an unmeasured axis is quiet, because it is the absence of a result. */
+.wr-axis[data-tone="signal"] {
+  --wr-tone: color-mix(in srgb, var(--color-red) 74%, var(--color-fg));
+}
+
+.wr-axis[data-tone="signal-ok"] {
+  --wr-tone: color-mix(in srgb, var(--color-green) 74%, var(--color-fg));
+}
+
+.wr-axis[data-tone="plain"] {
+  --wr-tone: var(--color-fg);
+}
+
+.wr-axis[data-tone="quiet"] {
+  --wr-tone: var(--color-muted);
+}
+
+.wr-icon {
+  width: 16px;
+  height: 16px;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--color-fg);
+  opacity: 0.55;
+}
+
+.wr-name {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--color-fg);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.wr-note {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.wr-value {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: end;
+  color: var(--wr-tone);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* Reveals resolve focus, never position. Nothing moves. */
+@media (prefers-reduced-motion: no-preference) {
+  .wr-ask,
+  .wr-axis {
+    animation: wr-focus 0.7s var(--ease-reveal) both;
+    animation-delay: calc(120ms + var(--i, 0) * 90ms);
+  }
+
+  .wr-value,
+  .wr-note {
+    transition:
+      opacity 0.28s var(--ease-reveal),
+      filter 0.28s var(--ease-reveal);
+  }
+
+  .wr-axis[data-settling] .wr-value,
+  .wr-axis[data-settling] .wr-note {
+    opacity: 0.32;
+    filter: blur(5px);
+  }
+}
+
+@keyframes wr-focus {
+  0% {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}

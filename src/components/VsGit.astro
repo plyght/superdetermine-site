@@ -1,0 +1,133 @@
+---
+import { Icon } from "astro-icon/components";
+import Logo from "./Logo.astro";
+import "../styles/components/vsgit.css";
+
+/**
+ * Two version control systems recording different things, read as one picture:
+ * git keeps four commits and a gap you have to search, sdt keeps every state in
+ * that gap already graded. The two lanes below share a width so the red
+ * boundary lines up across them.
+ */
+const BARS = 64;
+const FIRST_RED = 48;
+const LAST_GREEN = FIRST_RED - 1;
+
+const lane = Array.from({ length: BARS }, (_, i) => ({
+  i,
+  verdict: i >= FIRST_RED ? "red" : "green",
+}));
+
+const COMMITS = ["ok", "ok", "ok", "bad"];
+---
+
+<section
+  id="vs-git"
+  class="vsgit mx-auto w-full max-w-[1560px] px-5 sm:px-8 lg:px-14"
+  aria-labelledby="vs-git-title"
+>
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <article class="vsgit-card vsgit-card--lead md:col-span-2" style="--i: 0">
+      <header class="vsgit-copy">
+        <h2 id="vs-git-title" class="card-h vsgit-h--lead">
+          git records what changed.<br />
+          <span>Nothing records what worked.</span>
+        </h2>
+        <p class="card-lede">
+          sdt is a separate version control system, and it grades every state, so nothing is left to
+          search.
+        </p>
+      </header>
+
+      <div class="vsgit-lanes">
+        <span class="vsgit-lane-name">git</span>
+        <div class="vsgit-lane vsgit-lane--commits" aria-hidden="true">
+          {
+            COMMITS.map((state, i) => (
+              <>
+                {i > 0 && (
+                  <span class="vsgit-wire" data-gap={i === COMMITS.length - 1 ? "true" : undefined}>
+                    {i === COMMITS.length - 1 && <Icon name="lucide:search" />}
+                  </span>
+                )}
+                <span class="vsgit-commit" data-verdict={state === "bad" ? "red" : "green"} />
+              </>
+            ))
+          }
+        </div>
+        <span class="vsgit-cmd">git bisect</span>
+
+        <span class="vsgit-lane-name" data-strong>sdt</span>
+        <div class="vsgit-lane vsgit-lane--moments" aria-hidden="true">
+          {
+            lane.map((bar) => (
+              <span
+                class="vsgit-moment"
+                data-verdict={bar.verdict}
+                data-head={bar.i === LAST_GREEN ? "true" : undefined}
+                style={`--i: ${bar.i}`}
+              />
+            ))
+          }
+        </div>
+        <span class="vsgit-cmd" data-strong>sdt green</span>
+      </div>
+    </article>
+
+    <article class="vsgit-card" style="--i: 1">
+      <header class="vsgit-copy">
+        <h3 class="card-h">History moves both ways, losslessly</h3>
+      </header>
+
+      <div class="vsgit-interop">
+        <span class="vsgit-node">
+          <Icon name="lucide:folder-git-2" aria-hidden="true" />
+          .git
+        </span>
+        <span class="vsgit-swap">
+          <Icon name="lucide:arrow-left-right" aria-hidden="true" />
+        </span>
+        <span class="vsgit-node" data-strong>
+          <Logo class="vsgit-mark" />
+          .sdt
+        </span>
+      </div>
+
+      <div class="vsgit-cmds">
+        <span class="vsgit-cmd">sdt import</span>
+        <span class="vsgit-cmd">sdt export</span>
+        <span class="vsgit-cmd">sync.git</span>
+      </div>
+    </article>
+
+    <article class="vsgit-card" style="--i: 2">
+      <header class="vsgit-copy">
+        <h3 class="card-h">Red never leaves the machine</h3>
+      </header>
+
+      <ul class="vsgit-gate" role="list">
+        <li data-verdict="green">
+          <span class="vsgit-state">green</span>
+          <span class="vsgit-wire"></span>
+          <span class="vsgit-dest">
+            <Icon name="lucide:arrow-right" aria-hidden="true" />
+            origin
+          </span>
+        </li>
+        <li data-verdict="red">
+          <span class="vsgit-state">red</span>
+          <span class="vsgit-wire" data-blocked="true"></span>
+          <span class="vsgit-dest">
+            <Icon name="lucide:circle-x" aria-hidden="true" />
+            stays home
+          </span>
+        </li>
+      </ul>
+
+      <div class="vsgit-cmds">
+        <span class="vsgit-cmd" data-strong>sdt push --require-green</span>
+        <span class="vsgit-cmd">sdt attest</span>
+      </div>
+    </article>
+  </div>
+</section>

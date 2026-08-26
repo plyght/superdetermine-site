@@ -1,0 +1,51 @@
+.feature-card {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+.feature-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: var(--color-fg);
+}
+
+.feature-icon svg {
+  display: block;
+  width: 32px;
+  height: 32px;
+  opacity: 0.55;
+}
+
+.feature-icon svg * {
+  stroke-width: 1.5;
+}
+
+.feature-label {
+  color: var(--color-fg);
+  opacity: 0.85;
+}
+
+.feature-card:hover {
+  background-color: var(--color-surface-strong);
+  box-shadow: inset 0 0 0 1px var(--color-hairline);
+}
+
+.feature-card:hover .feature-icon svg,
+.feature-card:hover .feature-label {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .feature-card,
+  .feature-icon svg,
+  .feature-label {
+    transition:
+      background-color 260ms var(--ease-reveal),
+      box-shadow 260ms var(--ease-reveal),
+      opacity 260ms var(--ease-reveal);
+  }
+}

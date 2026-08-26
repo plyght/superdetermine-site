@@ -1,0 +1,47 @@
+---
+import "../styles/components/bottom-cta.css";
+import BuyButton from "./BuyButton.astro";
+import { MARK_PATH, MARK_VIEWBOX } from "../brand";
+---
+
+<section
+  id="download"
+  class="bottom-cta relative mx-auto mt-10 min-h-[500px] w-full max-w-[1560px] overflow-hidden px-5 pt-20 sm:mt-14 sm:min-h-[400px] sm:px-8 sm:pt-12 lg:px-14"
+>
+  <div class="relative z-10 flex flex-col items-center gap-5 text-center">
+    <BuyButton size="lg" variant="white" />
+    <p class="text-[14px] tracking-[-0.01em] text-muted">
+      Free and open source. Already have it? Run <code>sdt update</code>.
+    </p>
+  </div>
+
+  <!-- Oversized watermark, clipped at the bottom. Two layers let the top fade
+       remain crisp while the lower portion progressively blurs into the crop. -->
+  <div
+    class="bottom-cta-mark pointer-events-none absolute inset-x-0 z-0 flex justify-center"
+    aria-hidden="true"
+  >
+    <svg
+      viewBox={MARK_VIEWBOX}
+      width="400"
+      height="400"
+      fill="none"
+      class="bottom-cta-mark-sharp h-[390px] w-auto text-white/[0.045] sm:h-[470px]"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d={MARK_PATH} fill="currentColor" fill-rule="evenodd"></path>
+    </svg>
+    <svg
+      viewBox={MARK_VIEWBOX}
+      width="400"
+      height="400"
+      fill="none"
+      class="bottom-cta-mark-blur absolute h-[390px] w-auto text-white/[0.05] sm:h-[470px]"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d={MARK_PATH} fill="currentColor" fill-rule="evenodd"></path>
+    </svg>
+  </div>
+</section>

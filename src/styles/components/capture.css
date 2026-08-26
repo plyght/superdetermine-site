@@ -1,0 +1,314 @@
+/* The "Nothing is ever unsaved" section: a copy rail on the left and one wide
+   recording tape on the right. The tape keeps running while the playhead is
+   pulled back into the past, and everything to the right of the playhead stays
+   on the tape, which is the whole claim of the section. */
+.capture-card {
+  display: grid;
+  gap: 24px;
+  padding: 20px;
+}
+
+@media (min-width: 640px) {
+  .capture-card {
+    padding: 24px;
+  }
+}
+
+.capture-copy {
+  display: flex;
+  flex-direction: column;
+  max-width: 460px;
+}
+
+.capture-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.capture-facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--color-fg);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.capture-facts svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex: 0 0 auto;
+  color: var(--color-fg);
+  opacity: 0.55;
+}
+
+/* ---- tape ---------------------------------------------------------------- */
+
+.tape {
+  --pitch: 24px;
+  --head-offset: 22;
+  --pin-offset: 4;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.tape-stage {
+  position: relative;
+  overflow: hidden;
+  height: 184px;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.tape-stage:active {
+  cursor: grabbing;
+}
+
+.tape-stage:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.tape-baseline {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--color-hairline);
+}
+
+/* One element per captured state, sitting on whole pixels and never scaled or
+   masked, so translating the lattice cannot resample a hard edge. Marks are
+   right anchored with six pitches of overscan, which is also the period of the
+   major/minor pattern, so the flow wraps on an exact multiple of the pitch and
+   the seam lands mark for mark. */
+.tape-marks {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.tape-marks i {
+  position: absolute;
+  top: 50%;
+  right: calc((var(--k) - 6) * var(--pitch));
+  width: 2px;
+  height: 20px;
+  border-radius: 1px;
+  margin-top: -10px;
+  background: var(--color-faint);
+  opacity: 0.6;
+}
+
+.tape-marks i.is-major {
+  height: 44px;
+  margin-top: -22px;
+  background: var(--color-muted);
+  opacity: 1;
+}
+
+/* Everything the rewind skipped past, from the playhead to the live edge. It is
+   lit, not dimmed and not removed: the second lattice inside it is the same
+   marks at full strength, laid exactly over the quiet ones. Anchored one stage
+   width to the right and slid back by the playhead offset, so its own width
+   never changes and the marks inside it need no width in their transform. */
+.tape-kept {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  overflow: hidden;
+  width: 100%;
+  background: var(--color-surface-strong);
+  transform: translate3d(calc(var(--head-offset) * var(--pitch) * -1), 0, 0);
+  will-change: transform;
+}
+
+.tape-marks.is-lit {
+  right: 100%;
+  left: auto;
+  width: 100%;
+  transform: translate3d(calc(var(--head-offset) * var(--pitch)), 0, 0);
+}
+
+.tape-marks.is-lit i {
+  background: var(--color-muted);
+  opacity: 1;
+}
+
+.tape-marks.is-lit i.is-major {
+  background: var(--color-fg);
+}
+
+/* The live edge. Capture is still running here while the playhead sits in the
+   past, which is the reason the kept span keeps growing. */
+.tape-edge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-green);
+}
+
+.tape-edge:before {
+  position: absolute;
+  inset: -30px -26px;
+  background: var(--color-green);
+  content: "";
+  filter: blur(22px);
+  opacity: 0.24;
+}
+
+/* The state the rewind left behind, captured on the way out. */
+.tape-pin {
+  position: absolute;
+  top: 14px;
+  right: 0;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  margin-right: -12px;
+  background: var(--color-green);
+  color: var(--color-ink);
+  opacity: var(--pin-opacity, 1);
+  transform: translate3d(calc(var(--pin-offset) * var(--pitch) * -1), 0, 0);
+  will-change: transform;
+}
+
+.tape-pin svg {
+  width: 13px;
+  height: 13px;
+}
+
+.tape-pin:after {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  width: 1px;
+  height: 20px;
+  background: var(--color-green);
+  content: "";
+  opacity: 0.45;
+}
+
+.tape-playhead {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+  margin-right: -1.5px;
+  border-radius: 999px;
+  background: var(--color-fg);
+  transform: translate3d(calc(var(--head-offset) * var(--pitch) * -1), 0, 0);
+  will-change: transform;
+}
+
+/* The readout rides the playhead instead of sitting in a corner, so the thing
+   that says where you are is the thing you grab. */
+.tape-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  height: 34px;
+  align-items: center;
+  padding: 0 12px 0 5px;
+  border-radius: 999px;
+  gap: 3px;
+  background: var(--color-fg);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translate3d(calc(-50% + var(--handle-shift, 0px)), -50%, 0);
+}
+
+.tape-handle b {
+  font-weight: 500;
+}
+
+.tape-handle svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  opacity: 0.55;
+}
+
+@media (min-width: 1024px) {
+  .capture-card {
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 48px;
+  }
+  .capture-facts {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+  .tape-stage {
+    height: 216px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .capture-card {
+    gap: 72px;
+  }
+  .tape-stage {
+    height: 248px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* `backwards`, not `both`: a retained `filter` on the tape or on the section
+     around it would keep the flowing lattice inside a filtered subtree and cost
+     it its composited texture. The end state of the reveal is the natural state
+     anyway. */
+  .capture-section,
+  .capture-copy h2,
+  .capture-copy p,
+  .capture-facts li,
+  .tape {
+    animation-fill-mode: backwards;
+  }
+  .capture-copy h2,
+  .capture-copy p,
+  .capture-facts li,
+  .tape {
+    animation: page-reveal 0.7s var(--ease-reveal) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  .tape {
+    animation-duration: 0.9s;
+  }
+  .tape-pin {
+    transition: opacity 0.35s var(--ease-reveal);
+  }
+  .tape-handle {
+    transition:
+      box-shadow 0.25s var(--ease-reveal),
+      scale 0.25s var(--ease-reveal);
+  }
+  .tape-stage:hover .tape-handle,
+  .tape-stage:focus-visible .tape-handle {
+    scale: 1.06;
+  }
+}

@@ -1,0 +1,373 @@
+/* The sdt vs. git section. Three flat cards, each carrying the argument in a
+   picture rather than in prose: the gap git leaves between commits, the two
+   way door to a plain git repo, and the gate a red state never gets through. */
+.vsgit-card {
+  position: relative;
+  display: flex;
+  min-height: 273px;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+@media (min-width: 640px) {
+  .vsgit-card {
+    padding: 24px;
+  }
+}
+
+.vsgit-card--lead {
+  min-height: 340px;
+}
+
+.vsgit-copy {
+  max-width: none;
+}
+
+.vsgit-copy:has(.card-lede) {
+  max-width: 460px;
+}
+
+.vsgit-h--lead span {
+  color: var(--color-faint);
+}
+
+.vsgit-copy:has(.vsgit-h--lead) {
+  max-width: 620px;
+}
+
+/* Verdict tones resolve through tokens so both themes follow. */
+.vsgit [data-verdict="green"] {
+  --vg-tone: color-mix(in srgb, var(--color-green) 88%, transparent);
+}
+
+.vsgit [data-verdict="red"] {
+  --vg-tone: color-mix(in srgb, var(--color-red) 88%, transparent);
+}
+
+/* Idle glyphs carry their dimming as element opacity on the svg, never as a
+   translucent colour. A translucent paint composites each overlapping part of
+   a glyph over the last, so crossing strokes and overlapping rays come out
+   brighter than the rest. Element opacity flattens the glyph once, so it
+   cannot double up. These two match the alpha of --color-muted and
+   --color-faint in each theme. */
+.vsgit {
+  --vg-glyph-muted: 0.5;
+  --vg-glyph-faint: 0.35;
+}
+
+html[data-theme="light"] .vsgit {
+  --vg-glyph-muted: 0.55;
+  --vg-glyph-faint: 0.4;
+}
+
+.vsgit-cmd {
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: var(--color-surface-strong);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.vsgit-cmd[data-strong] {
+  color: var(--color-fg);
+}
+
+.vsgit-cmds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+/* Two lanes over the same span of time: four commits with a gap you have to
+   search, and every state inside that gap already graded. */
+.vsgit-lanes {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px 16px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+/* Both labels stretch to the same auto column, so the text is centred inside
+   the pill rather than left aligned in a wider box. That keeps the two rows
+   reading as one pair. */
+.vsgit-lanes > .vsgit-cmd {
+  text-align: center;
+}
+
+.vsgit-lane-name {
+  color: var(--color-faint);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+.vsgit-lane-name[data-strong] {
+  color: var(--color-fg);
+}
+
+.vsgit-lane {
+  display: flex;
+  height: 46px;
+  min-width: 0;
+  align-items: center;
+}
+
+.vsgit-wire {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.vsgit-wire:before,
+.vsgit-wire[data-gap]:after {
+  flex: 1 1 auto;
+  border-top: 1px solid var(--color-hairline);
+  content: "";
+}
+
+.vsgit-wire[data-gap]:before,
+.vsgit-wire[data-gap]:after {
+  border-top-style: dashed;
+}
+
+.vsgit-wire svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--color-fg);
+  opacity: var(--vg-glyph-faint);
+}
+
+.vsgit-commit {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--vg-tone);
+}
+
+/* Same span, read as one continuous strip: every state carries a verdict, so
+   the bars are uniform and only the colour changes. Cousin to the moment
+   field, so the cell radius and the head treatment match it. */
+.vsgit-lane--moments {
+  align-items: center;
+  gap: 3px;
+}
+
+.vsgit-moment {
+  min-width: 0;
+  height: 26px;
+  flex: 1 1 0;
+  border-radius: 2px;
+  background: var(--vg-tone);
+}
+
+/* Where `sdt green` lands: a playhead standing taller than the strip. */
+.vsgit-moment[data-head] {
+  height: 100%;
+  background: var(--color-fg);
+}
+
+/* A two way door between the two stores. */
+.vsgit-interop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 6vw, 44px);
+  margin-top: auto;
+  padding: 24px 0 0;
+}
+
+.vsgit-node {
+  display: inline-flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 9px;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+.vsgit-node[data-strong] {
+  color: var(--color-fg);
+}
+
+.vsgit-node svg {
+  width: 26px;
+  height: 26px;
+  color: var(--color-fg);
+  opacity: var(--vg-glyph-muted);
+}
+
+.vsgit-node[data-strong] svg {
+  opacity: 1;
+}
+
+.vsgit-node svg.vsgit-mark {
+  width: 24px;
+  height: 24px;
+}
+
+/* The wrapper carries the reveal, the svg carries the dimming, so the
+   animation cannot land on opacity: 1 and undo it. */
+.vsgit-swap {
+  display: inline-flex;
+  flex: none;
+}
+
+.vsgit-swap svg {
+  width: 18px;
+  height: 18px;
+  color: var(--color-fg);
+  opacity: var(--vg-glyph-faint);
+}
+
+/* The gate: one lane arrives, the other does not. */
+.vsgit-gate {
+  display: grid;
+  gap: 16px;
+  margin: auto 0 0;
+  padding: 24px 0 0;
+  list-style: none;
+}
+
+.vsgit-gate li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.vsgit-state {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--vg-tone) 18%, transparent);
+  color: var(--vg-tone);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.vsgit-wire[data-blocked]:before {
+  border-top-style: dashed;
+}
+
+.vsgit-dest {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-muted);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.vsgit-gate li[data-verdict="green"] .vsgit-dest {
+  color: var(--color-fg);
+}
+
+.vsgit-dest svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--color-fg);
+  opacity: var(--vg-glyph-faint);
+}
+
+@media (min-width: 1024px) {
+  .vsgit-card--lead .vsgit-copy {
+    display: flex;
+    max-width: none;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 64px;
+  }
+
+  .vsgit-card--lead .card-h {
+    max-width: 620px;
+  }
+
+  .vsgit-card--lead .card-lede {
+    max-width: 36ch;
+    margin: 0;
+    padding-top: 7px;
+  }
+}
+
+@media (max-width: 639px) {
+  .vsgit-lanes {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px 12px;
+  }
+
+  .vsgit-lanes > .vsgit-cmd {
+    grid-column: 2;
+    justify-self: start;
+    margin-bottom: 6px;
+  }
+
+  .vsgit-lane {
+    height: 40px;
+  }
+
+  .vsgit-lane--moments {
+    gap: 2px;
+  }
+
+  .vsgit-moment {
+    height: 22px;
+  }
+
+  .vsgit-dest span,
+  .vsgit-gate li {
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .vsgit-card {
+    animation: vsgit-in 0.75s var(--ease-reveal) both;
+    animation-delay: calc(var(--i, 0) * 0.08s);
+  }
+
+  .vsgit-moment,
+  .vsgit-commit,
+  .vsgit-node,
+  .vsgit-swap,
+  .vsgit-gate li {
+    animation: vsgit-in 0.55s var(--ease-reveal) both;
+    animation-delay: calc(0.2s + var(--i, 0) * 0.018s);
+  }
+
+  .vsgit-swap {
+    animation-delay: 0.28s;
+  }
+
+  .vsgit-gate li:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes vsgit-in {
+    from {
+      opacity: 0;
+      filter: blur(7px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+}

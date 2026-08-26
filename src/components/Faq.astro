@@ -57,22 +57,11 @@ const FAQS = [
   aria-labelledby="faq-title"
   data-faq-reveal
 >
-  <div class="mx-auto w-full max-w-[760px] py-20 sm:py-24">
-    <h2
-      id="faq-title"
-      class="faq-reveal text-[clamp(28px,4.6vw,40px)] font-semibold leading-[1.08] tracking-[-0.03em] text-white"
-      style="--faq-i: 0"
-    >
-      Frequently asked questions
-    </h2>
-    <p
-      class="faq-intro faq-reveal mt-3 text-[15px] leading-[1.45] tracking-[-0.01em]"
-      style="--faq-i: 1"
-    >
-      What to know before you run sdt init.
-    </p>
+  <div class="mx-auto w-full max-w-[760px] py-14 sm:py-16">
+    <h2 id="faq-title" class="card-h faq-reveal" style="--faq-i: 0">Frequently asked questions</h2>
+    <p class="card-lede faq-reveal" style="--faq-i: 1">What to know before you run sdt init.</p>
 
-    <div class="mt-8 flex flex-col gap-3">
+    <div class="mt-6 flex flex-col gap-4">
       {FAQS.map((faq, i) => <FaqItem question={faq.question} answer={faq.answer} index={i + 2} />)}
     </div>
   </div>

@@ -7,9 +7,15 @@
   min-height: 273px;
   flex-direction: column;
   overflow: hidden;
-  padding: 24px;
+  padding: 20px;
   border-radius: var(--radius-card);
   background: var(--color-surface);
+}
+
+@media (min-width: 640px) {
+  .vsgit-card {
+    padding: 24px;
+  }
 }
 
 .vsgit-card--lead {
@@ -20,34 +26,12 @@
   max-width: 460px;
 }
 
-.vsgit-h {
-  margin: 0;
-  color: var(--color-fg);
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.06;
-}
-
-.vsgit-h--lead {
-  font-size: clamp(28px, 3vw, 38px);
-  letter-spacing: -0.03em;
-}
-
 .vsgit-h--lead span {
   color: var(--color-faint);
 }
 
 .vsgit-copy:has(.vsgit-h--lead) {
   max-width: 620px;
-}
-
-.vsgit-line {
-  margin: 8px 0 0;
-  color: var(--color-muted);
-  font-size: 14px;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
 }
 
 /* Verdict tones resolve through tokens so both themes follow. */
@@ -95,7 +79,7 @@ html[data-theme="light"] .vsgit {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 /* Two lanes over the same span of time: four commits with a gap you have to
@@ -106,7 +90,7 @@ html[data-theme="light"] .vsgit {
   align-items: center;
   gap: 16px 16px;
   margin-top: auto;
-  padding-top: 34px;
+  padding-top: 24px;
 }
 
 /* Both labels stretch to the same auto column, so the text is centred inside
@@ -199,7 +183,7 @@ html[data-theme="light"] .vsgit {
   justify-content: center;
   gap: clamp(20px, 6vw, 44px);
   margin-top: auto;
-  padding: 26px 0 6px;
+  padding: 24px 0 0;
 }
 
 .vsgit-node {
@@ -252,7 +236,7 @@ html[data-theme="light"] .vsgit {
   display: grid;
   gap: 16px;
   margin: auto 0 0;
-  padding: 26px 0 0;
+  padding: 24px 0 0;
   list-style: none;
 }
 
@@ -300,10 +284,6 @@ html[data-theme="light"] .vsgit {
 }
 
 @media (max-width: 639px) {
-  .vsgit-card {
-    padding: 20px;
-  }
-
   .vsgit-lanes {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 10px 12px;

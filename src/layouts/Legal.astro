@@ -27,22 +27,16 @@ const { title, description, heading, intro, highlightHeading, highlightBody, sec
 
 <Base title={title} description={description} intro>
   <main id="main" class="flex flex-col gap-4 pt-2">
-    <section class="mx-auto w-full max-w-[720px] px-5 pt-10 sm:px-6 sm:pt-16">
-      <h1
-        class="legal-item text-[clamp(28px,4.6vw,40px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white"
-      >
-        {heading}
-      </h1>
-      <p class="legal-item mt-3 text-[14px] leading-[1.4] tracking-[-0.01em] text-faint">
-        {intro}
-      </p>
+    <section class="mx-auto w-full max-w-[720px] px-5 pt-10 sm:px-8 sm:pt-16">
+      <h1 class="legal-item card-h">{heading}</h1>
+      <p class="legal-item card-lede">{intro}</p>
 
-      <div class="legal-item legal-highlight mt-9 rounded-card bg-surface p-5 sm:p-7">
+      <div class="legal-item legal-highlight mt-8 rounded-card bg-surface p-5 sm:p-6">
         <h2>{highlightHeading}</h2>
         <Prose text={highlightBody} />
       </div>
 
-      <div class="legal-item legal-details mt-10 sm:mt-12">
+      <div class="legal-item legal-details mt-8 sm:mt-10">
         {
           sections.map((section) => (
             <section class="legal-section" aria-labelledby={section.id}>

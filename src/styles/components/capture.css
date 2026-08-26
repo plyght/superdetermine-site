@@ -4,32 +4,20 @@
    on the tape, which is the whole claim of the section. */
 .capture-card {
   display: grid;
-  gap: 28px;
-  padding: 24px;
+  gap: 24px;
+  padding: 20px;
+}
+
+@media (min-width: 640px) {
+  .capture-card {
+    padding: 24px;
+  }
 }
 
 .capture-copy {
   display: flex;
   flex-direction: column;
   max-width: 460px;
-}
-
-.capture-copy h2 {
-  margin: 0;
-  color: var(--color-fg);
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-}
-
-.capture-copy p {
-  max-width: 44ch;
-  margin: 10px 0 0;
-  color: var(--color-muted);
-  font-size: 14px;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
 }
 
 .capture-copy code,
@@ -43,7 +31,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin: 22px 0 0;
+  margin: 20px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -300,10 +288,6 @@
     grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
     align-items: stretch;
     gap: 48px;
-    padding: 32px;
-  }
-  .capture-copy h2 {
-    font-size: 32px;
   }
   .tape-stage {
     height: 216px;
@@ -313,7 +297,6 @@
 @media (min-width: 1440px) {
   .capture-card {
     gap: 72px;
-    padding: 40px;
   }
   .tape-stage {
     height: 248px;

@@ -165,6 +165,30 @@ body {
   opacity: 0.72;
 }
 
+.card-h {
+  margin: 0;
+  color: var(--color-fg);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+@media (min-width: 640px) {
+  .card-h {
+    font-size: 32px;
+  }
+}
+
+.card-lede {
+  max-width: 44ch;
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
 .wave-canvas {
   width: 100%;
   height: 100%;

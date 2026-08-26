@@ -51,10 +51,6 @@ summary {
   max-width: 62ch;
 }
 
-.faq-intro {
-  color: var(--color-muted);
-}
-
 /* Reveals resolve focus rather than position, so nothing here moves. Items sit
    fully painted until the script marks the section ready, which keeps the
    no-JS render correct. */

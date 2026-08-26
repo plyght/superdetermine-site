@@ -4,14 +4,13 @@
  * A few hairline tracks run across the card. Each is a trunk that runs dead
  * straight while diversions keep peeling off it. They are not all the same kind
  * of event: some are stubs that die almost at once, some run parallel for a long
- * stretch, some wander and cross the trunk, some fork again before they end,
+ * stretch, some step across the trunk, some fork again before they end,
  * some are merged back in, some run their full length and stop dead, and once
  * in a while the trunk itself goes dark and a diversion carries the line on
  * instead, which is what a rewind actually is.
  *
  * The whole history drifts leftward past a fixed hairline near the right, the
- * grading head. Left of it the field is resolved and lit, right of it it is
- * still faint, and each branch point brightens once as it crosses.
+ * grading head, the one crisp vertical in the frame.
  *
  * The export keeps the name and signature the rest of the site imports.
  */
@@ -50,7 +49,6 @@ interface Field {
   /** Where the grading head sits across the width, 0 to 1. */
   mark: number;
   markAlpha: number;
-  markHalo: number;
   /** Peak edge softness at the far left, in CSS pixels, and its ramp exponent. */
   maxBlur: number;
   blurExp: number;
@@ -120,10 +118,9 @@ const DEFAULT_FIELD: Field = {
     },
   ],
   mark: 0.735,
-  markAlpha: 0.13,
-  markHalo: 0.032,
-  maxBlur: 12,
-  blurExp: 4.0,
+  markAlpha: 0.12,
+  maxBlur: 9,
+  blurExp: 4.2,
   alpha: 0.27,
   hoverAlpha: 0.09,
   topFade: [0.18, 0.42],
@@ -181,8 +178,7 @@ const SETTINGS_FIELD: Field = {
     },
   ],
   mark: 0.62,
-  markAlpha: 0.15,
-  markHalo: 0.038,
+  markAlpha: 0.14,
   maxBlur: 13,
   blurExp: 2.6,
   alpha: 0.3,
@@ -257,7 +253,6 @@ const vec3  MARK_INK = ${rgb(MARK_INK)};
 
 const float MARK = ${f(p.mark)};
 const float MARK_A = ${f(p.markAlpha)};
-const float MARK_HALO = ${f(p.markHalo)};
 const float MAX_BLUR = ${f(p.maxBlur)};
 const float BLUR_EXP = ${f(p.blurExp)};
 const float BASE_A = ${f(p.alpha)};
@@ -327,26 +322,27 @@ float track(vec2 frag, float W, float H, float soft, vec4 geom, vec4 mode, float
   // Below the threshold the branch point never opens at all.
   float amp = spreadF * H * (0.40 + 0.60 * r3) * step(0.12, r1);
 
-  // A slight taper along the run, so a diversion drifts a little further out or
-  // back in as it goes rather than holding one exact offset. It is linear on
-  // purpose: a straight angle reads as machined, where a wave would not.
-  float run = max(t1 - t0, 0.05);
-  float tilt = (r4 - 0.5) * 0.24;
-  float sway = 1.0 + tilt * clamp((t - t0) / run, 0.0, 1.0);
-  float dsway = tilt / run * (step(t0, t) - step(t1, t));
-
-  // A few diversions cross the trunk and carry on along the far side. The window
-  // is zero where the sign flip starts and ends, so nothing snaps.
+  // A few diversions cross the trunk and carry on along the far side. The sign
+  // flip takes one shoulder width in the middle of the run, so it reads as a
+  // step across rather than a long diagonal, and the run stays flat either side.
   float cross = step(0.93, r4);
-  float flip = mix(1.0, 1.0 - 2.0 * smoothstep(t0 + 0.10, t1 + ramp, t), cross);
+  float mid = (t0 + t1) * 0.5;
+  float flipT = smoothstep(mid - ramp * 0.5, mid + ramp * 0.5, t);
+  float flip = mix(1.0, 1.0 - 2.0 * flipT, cross);
+  float dflip = cross * -12.0 * flipT * (1.0 - flipT) / ramp;
 
   float side = sign(r5 - 0.5);
-  float off = side * amp * w * sway * flip;
-  float slope = side * amp * (dwdt * sway + w * dsway) * flip / lens;
+  float off = side * amp * w * flip;
+  float slope = side * amp * (dwdt * flip + w * dflip) / lens;
   float invS = inversesqrt(1.0 + slope * slope);
 
   float trunkCov = 1.0 - smoothstep(halfW - soft, halfW + soft, abs(frag.y - y0));
   float divCov = 1.0 - smoothstep(halfW - soft, halfW + soft, abs(frag.y - (y0 + off)) * invS);
+  // A diversion only exists once it is clear of the trunk. Without this the two
+  // strokes overlap around the branch point and their union reads as the trunk
+  // briefly getting fatter. It also gives a rejoin its meaning for free: the
+  // filament merges back into the line rather than sitting on top of it.
+  divCov *= smoothstep(halfW * 0.9, halfW * 2.4, abs(off));
 
   // What kind of event this is. The bands are nudged per track by flavor, so the
   // four tracks show different mixes rather than one mix reseeded.
@@ -367,7 +363,7 @@ float track(vec2 frag, float W, float H, float soft, vec4 geom, vec4 mode, float
   // diversion, the one that held, carries the line instead. The dip closes
   // before the cell ends so the trunk is continuous across the seam.
   float hEnd = min(t1 + 0.14, 0.96);
-  float trunkA = 1.0 - handoff * 0.9 * smoothstep(t0 + 0.02, t0 + 0.22, t)
+  float trunkA = 1.0 - handoff * 0.45 * smoothstep(t0 + 0.02, t0 + 0.22, t)
                  * (1.0 - smoothstep(hEnd - 0.24, hEnd, t));
 
   // A dead end that forked: a second filament leaves the diversion partway along
@@ -375,18 +371,17 @@ float track(vec2 frag, float W, float H, float soft, vec4 geom, vec4 mode, float
   // enough at this stroke width to cost nothing visible.
   float xs = clamp((t - (t0 + (t1 - t0) * 0.55)) / (ramp * 0.9), 0.0, 1.0);
   float forkOff = off + side * amp * (0.40 + 0.22 * r3) * xs * xs * (3.0 - 2.0 * xs);
-  float forkA = forkOn * step(0.66, r5) * 0.6 * (1.0 - smoothstep(t1 - 0.16, t1 + 0.02, t));
+  float forkA = forkOn * step(0.66, r5) * (1.0 - smoothstep(t1 - 0.16, t1 + 0.02, t));
   float forkCov =
-    (1.0 - smoothstep(halfW - soft, halfW + soft, abs(frag.y - (y0 + forkOff)) * invS)) * forkA;
+    (1.0 - smoothstep(halfW - soft, halfW + soft, abs(frag.y - (y0 + forkOff)) * invS)) * forkA
+    * smoothstep(halfW * 0.9, halfW * 2.4, abs(forkOff - off));
 
-  // The centre of this branch point in screen fractions. Both terms shift by the
-  // same amount when the phase wraps, so the pulse never jumps.
-  float q = ((cell + 0.5 - phase) * lensF - MARK) / 0.075;
-  float lift = 1.0 + 1.1 * exp(-q * q);
-
-  float aT = min(trunkCov * trunkA * lift, 1.0);
-  float aD = min(divCov * divA * lift * mix(0.58, 1.0, handoff) * (1.0 + 0.30 * graded), 1.0);
-  float aF = forkCov * 0.55;
+  // Two ink levels in the whole field and no more: the trunk, and every
+  // diversion at a fixed step below it. What kind of event a diversion is shows
+  // in its shape and how it ends, never in how bright it is.
+  float aT = trunkCov * trunkA;
+  float aD = divCov * divA * 0.72;
+  float aF = forkCov * 0.72;
   float c = aD + aF * (1.0 - aD);
   return (aT + c * (1.0 - aT)) * weight;
 }
@@ -414,17 +409,13 @@ void main() {
   float c;
   ${p.tracks.map(trackCall).join("\n  ")}
 
-  float resolved = smoothstep(MARK + 0.05, MARK - 0.12, p.x);
   float topFade = smoothstep(TOP_FADE0, TOP_FADE1, p.y);
-  float a = cov * mix(0.28, 1.0, resolved) * topFade * uIntro
-          * (BASE_A + uHover * HOVER_A);
+  float a = cov * topFade * uIntro * (BASE_A + uHover * HOVER_A);
   vec3 col = mix(base, INK, clamp(a, 0.0, 1.0));
 
   float mq = (p.x - MARK) * W / (1.15 * uScale);
-  float hq = (p.x - MARK) / 0.05;
   float mv = smoothstep(TOP_FADE0, TOP_FADE1, p.y) * smoothstep(1.04, 0.74, p.y);
-  float ma = (exp(-mq * mq) * MARK_A + exp(-hq * hq) * MARK_HALO) * mv * uIntro
-           * (1.0 + 0.7 * uHover);
+  float ma = exp(-mq * mq) * MARK_A * mv * uIntro * (1.0 + 0.6 * uHover);
   col = mix(col, MARK_INK, clamp(ma, 0.0, 1.0));
 
   col += (hash21(frag) - 0.5) * GRAIN;

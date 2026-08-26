@@ -283,6 +283,26 @@ html[data-theme="light"] .vsgit {
   opacity: var(--vg-glyph-faint);
 }
 
+@media (min-width: 1024px) {
+  .vsgit-card--lead .vsgit-copy {
+    display: flex;
+    max-width: none;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 64px;
+  }
+
+  .vsgit-card--lead .card-h {
+    max-width: 620px;
+  }
+
+  .vsgit-card--lead .card-lede {
+    max-width: 36ch;
+    margin: 0;
+    padding-top: 7px;
+  }
+}
+
 @media (max-width: 639px) {
   .vsgit-lanes {
     grid-template-columns: auto minmax(0, 1fr);

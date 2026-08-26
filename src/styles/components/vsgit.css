@@ -23,6 +23,10 @@
 }
 
 .vsgit-copy {
+  max-width: none;
+}
+
+.vsgit-copy:has(.card-lede) {
   max-width: 460px;
 }
 

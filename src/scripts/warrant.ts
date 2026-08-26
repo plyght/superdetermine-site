@@ -19,14 +19,14 @@ const AUTHORS: Author[] = [
     label: "the same agent",
     tone: "signal",
     value: "no",
-    note: "same author as the code",
+    note: "same author",
   },
   {
     id: "other",
     label: "someone else",
     tone: "signal-ok",
     value: "yes",
-    note: "a different author from the code",
+    note: "a different author",
   },
 ];
 

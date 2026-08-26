@@ -176,6 +176,7 @@ code {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.05;
+  text-wrap: balance;
 }
 
 @media (min-width: 640px) {

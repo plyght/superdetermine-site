@@ -19,13 +19,21 @@ const FACTS = [
 ];
 
 /**
- * The still frame the page ships with: the playhead parked thirty nine minutes
- * back, the states it left behind still on the tape, and the tape still
+ * One mark per captured state, every sixth one taller, so the whole lattice
+ * repeats every six marks and the flow can wrap on an exact multiple of the
+ * pitch. Sixty four covers the widest stage plus six pitches of overscan at
+ * each end.
+ */
+const MARKS = Array.from({ length: 64 }, (_, k) => k);
+
+/**
+ * The still frame the page ships with: the playhead parked seven minutes back,
+ * every state it skipped past still lit on the tape, and the tape still
  * recording at the live edge. The script picks it up from here.
  */
-const HEAD_OFFSET = 26;
-const PIN_OFFSET = 5;
-const READOUT = "14:02 · 39 minutes back";
+const HEAD_OFFSET = 22;
+const PIN_OFFSET = 4;
+const READOUT = "7 min back";
 ---
 
 <section
@@ -56,27 +64,34 @@ const READOUT = "14:02 · 39 minutes back";
       style={`--i: 5; --head-offset: ${HEAD_OFFSET}; --pin-offset: ${PIN_OFFSET}`}
       data-tape
     >
-      <div class="tape-status">
-        <span class="tape-live-label">
-          <i class="tape-dot" aria-hidden="true"></i>
-          capture on · <b data-counter>1,284</b> moments
-        </span>
-        <span class="tape-readout" data-readout>{READOUT}</span>
-      </div>
-
       <div
         class="tape-stage"
         data-stage
-        role="img"
-        aria-label="A recording tape still capturing at its live edge, with the playhead pulled back thirty nine minutes and every state it left behind still on the tape"
+        tabindex="0"
+        role="slider"
+        aria-orientation="horizontal"
+        aria-label="Position on the capture tape"
+        aria-valuemin="0"
+        aria-valuemax="40"
+        aria-valuenow={HEAD_OFFSET}
+        aria-valuetext={`${READOUT}, with ${HEAD_OFFSET} captured states still on the tape ahead of here`}
       >
-        <div class="tape-flow" data-flow aria-hidden="true">
-          <div class="tape-rail"></div>
-          <div class="tape-major"></div>
+        <div class="tape-baseline" aria-hidden="true"></div>
+
+        <div class="tape-marks" data-marks aria-hidden="true">
+          {MARKS.map((k) => <i class={k % 6 === 0 ? "is-major" : undefined} style={`--k: ${k}`} />)}
         </div>
 
-        <div class="tape-baseline" aria-hidden="true"></div>
-        <div class="tape-wake" data-wake aria-hidden="true"></div>
+        <div class="tape-kept" data-kept aria-hidden="true">
+          <div class="tape-marks is-lit" data-lit>
+            {
+              MARKS.map((k) => (
+                <i class={k % 6 === 0 ? "is-major" : undefined} style={`--k: ${k}`} />
+              ))
+            }
+          </div>
+        </div>
+
         <div class="tape-edge" aria-hidden="true"></div>
 
         <div class="tape-pin" data-pin aria-hidden="true">
@@ -84,8 +99,9 @@ const READOUT = "14:02 · 39 minutes back";
         </div>
 
         <div class="tape-playhead" data-playhead aria-hidden="true">
-          <span class="tape-grip">
+          <span class="tape-handle" data-handle>
             <Icon name="lucide:grip-vertical" />
+            <b data-readout>{READOUT}</b>
           </span>
         </div>
       </div>

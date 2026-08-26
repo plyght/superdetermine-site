@@ -283,6 +283,10 @@
     align-items: stretch;
     gap: 48px;
   }
+  .capture-facts {
+    margin-top: auto;
+    padding-top: 20px;
+  }
   .tape-stage {
     height: 216px;
   }

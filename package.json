@@ -17,7 +17,6 @@
     "check": "bun run format:check && bun run typecheck && bun run build"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.3",
     "@iconify-json/lucide": "^1.2.126",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.2.1",

@@ -14,7 +14,7 @@ const AXES = [
     name: "Independence",
     tone: "signal",
     value: "no",
-    note: "same author",
+    note: "one agent wrote the code and the check",
   },
   {
     key: "relevance",
@@ -22,7 +22,7 @@ const AXES = [
     name: "Relevance",
     tone: "plain",
     value: "5 of 5",
-    note: "every changed file",
+    note: "the check opened every file that changed",
   },
   {
     key: "discrimination",
@@ -30,7 +30,7 @@ const AXES = [
     name: "Discrimination",
     tone: "quiet",
     value: "unknown",
-    note: "only when the check changes",
+    note: "measured only when the check itself changed",
   },
 ];
 
@@ -38,12 +38,15 @@ const AXES = [
 const AUTHOR = "the same agent";
 ---
 
-<article
-  class="relative flex min-h-[273px] flex-col overflow-hidden rounded-card bg-surface p-5 sm:p-6"
->
-  <header class="max-w-[460px] pb-6">
-    <h2 class="card-h">Green, with a warrant</h2>
-    <p class="card-lede">An agent can write both the code and its check.</p>
+<article class="relative flex min-h-[273px] flex-col overflow-hidden rounded-card bg-surface p-6">
+  <header class="max-w-[440px] pb-5">
+    <h2 class="text-[28px] font-semibold tracking-[-0.02em] text-white sm:text-[32px]">
+      Green, with a warrant
+    </h2>
+    <p class="mt-2 text-[14px] leading-[1.35] tracking-[-0.01em] text-muted">
+      An agent can write both the code and its check, so sdt labels every verdict and never blocks
+      your build.
+    </p>
   </header>
 
   <div class="wr mt-auto" data-warrant>

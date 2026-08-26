@@ -2,26 +2,23 @@
 import { Icon } from "astro-icon/components";
 import "../styles/components/features.css";
 
-/** The six trust badges above the closing CTA. */
+/** The three trust badges above the closing CTA. */
 const FEATURES = [
+  { icon: "lucide:history", label: "Continuous capture" },
+  { icon: "lucide:git-compare-arrows", label: "Git interop, both ways" },
   { icon: "lucide:copy", label: "Instant worktrees" },
-  { icon: "lucide:binary", label: "Binaries, no LFS" },
-  { icon: "lucide:rotate-ccw", label: "Reversible rewrites" },
-  { icon: "lucide:lock-keyhole", label: "Sealed secrets" },
-  { icon: "lucide:share-2", label: "Shared verdicts" },
-  { icon: "lucide:message-square-quote", label: "Blame with the prompt" },
 ];
 ---
 
 <section class="mx-auto w-full max-w-[1560px] px-5 sm:px-8 lg:px-14">
-  <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+  <div class="grid grid-cols-1 gap-3 pb-14 sm:grid-cols-3 sm:gap-4 sm:pb-0">
     {
       FEATURES.map((feature) => (
-        <div class="feature-card flex min-h-[132px] flex-col items-center justify-center gap-3 rounded-card p-4 text-center sm:min-h-[148px] sm:gap-4 sm:p-6">
+        <div class="feature-card flex min-h-[104px] flex-col items-center justify-center gap-4 rounded-card p-5 text-center sm:min-h-[148px] sm:p-6">
           <span class="feature-icon" aria-hidden="true">
             <Icon name={feature.icon} />
           </span>
-          <span class="feature-label text-[15px] font-medium tracking-[-0.01em]">
+          <span class="feature-label text-[14px] font-medium tracking-[-0.01em] sm:text-[15px]">
             {feature.label}
           </span>
         </div>

@@ -25,42 +25,6 @@ const ogImage = new URL("/og/superdetermine-og.png", Astro.site).href;
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#0a0a0a" />
-    <!-- sdt ships macOS and Linux binaries only, so the label names the visitor's
-         platform when it is one of those and stays generic otherwise, rather
-         than offering a build that does not exist. Inline so the label is
-         correct at first paint instead of flipping after hydration. -->
-    <script is:inline>
-      (() => {
-        const ua = navigator.userAgent || "";
-        const plat =
-          (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
-
-        function detect() {
-          // Android reports "Linux" and ChromeOS reports "X11", and neither runs sdt.
-          if (/Android/i.test(ua) || /CrOS/i.test(ua)) return null;
-          // iPadOS claims to be a Mac; a touch-capable "Mac" is not one.
-          if (/Mac/i.test(plat) && navigator.maxTouchPoints > 1) return null;
-          if (/Mac/i.test(plat)) return "macOS";
-          if (/Linux|X11/i.test(plat)) return "Linux";
-          return null;
-        }
-
-        const os = detect();
-        const label = os ? "Download for " + os : "Download";
-
-        function apply() {
-          document.querySelectorAll("[data-buy-btn] .buy-label").forEach((el) => {
-            el.textContent = label;
-          });
-        }
-
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", apply, { once: true });
-        } else {
-          apply();
-        }
-      })();
-    </script>
     <script is:inline>
       (() => {
         let theme = "dark";

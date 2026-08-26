@@ -2,11 +2,16 @@
  * The hero field: history as a horizontal axis.
  *
  * A few hairline tracks run across the card. Each is a trunk that runs dead
- * straight while diversions keep peeling off it, hold flat beside it for a
- * while, and end. Most of them just stop partway, which is the state nobody
- * named; some run their length and stop dead; some come back and merge into the
- * line. The whole history drifts leftward, and the oldest of it dissolves into
- * haze at the left edge.
+ * straight while diversions keep peeling off it. They are not all the same kind
+ * of event: some are stubs that die almost at once, some run parallel for a long
+ * stretch, some wander and cross the trunk, some fork again before they end,
+ * some are merged back in, some run their full length and stop dead, and once
+ * in a while the trunk itself goes dark and a diversion carries the line on
+ * instead, which is what a rewind actually is.
+ *
+ * The whole history drifts leftward past a fixed hairline near the right, the
+ * grading head. Left of it the field is resolved and lit, right of it it is
+ * still faint, and each branch point brightens once as it crosses.
  *
  * The export keeps the name and signature the rest of the site imports.
  */
@@ -26,9 +31,11 @@ interface Track {
   speed: number;
   /** Decorrelates this track's per-cell hashes from the others. */
   seed: number;
+  /** Whether diversions on this track can fork a second time before they end. */
+  fork: boolean;
   /**
-   * Shifts the thresholds that pick how a diversion ends, so each track shows a
-   * different mix rather than the same one reseeded.
+   * Shifts the thresholds that pick a diversion's behaviour, so each track shows
+   * a different mix of kinds rather than the same one reseeded.
    */
   flavor: number;
 }
@@ -39,7 +46,11 @@ interface Field {
   /** Gradient centre and radii, as fractions of the canvas box. */
   origin: [number, number];
   span: [number, number];
-  tracks: Track[];
+  tracks: [Track, Track, Track, Track];
+  /** Where the grading head sits across the width, 0 to 1. */
+  mark: number;
+  markAlpha: number;
+  markHalo: number;
   /** Peak edge softness at the far left, in CSS pixels, and its ramp exponent. */
   maxBlur: number;
   blurExp: number;
@@ -64,88 +75,55 @@ const DEFAULT_FIELD: Field = {
   span: [1.25, 1.5],
   tracks: [
     {
-      y: 0.4,
-      lens: 0.14,
-      spread: 0.02,
-      halfWidth: 0.42,
-      weight: 0.22,
-      speed: SPEED * 0.874,
-      seed: 41.7,
-      flavor: 0.62,
-    },
-    {
-      y: 0.455,
+      y: 0.42,
       lens: 0.255,
-      spread: 0.038,
-      halfWidth: 0.68,
+      spread: 0.072,
+      halfWidth: 0.72,
       weight: 0.5,
       speed: SPEED * 0.618,
       seed: 0,
+      fork: false,
       flavor: 0.15,
     },
     {
-      y: 0.535,
-      lens: 0.2,
-      spread: 0.056,
-      halfWidth: 1.05,
+      y: 0.562,
+      lens: 0.195,
+      spread: 0.06,
+      halfWidth: 0.92,
       weight: 1,
-      speed: SPEED * 1,
+      speed: SPEED,
       seed: 5.3,
+      fork: true,
       flavor: 0.55,
     },
     {
-      y: 0.6,
-      lens: 0.11,
-      spread: 0.018,
-      halfWidth: 0.4,
-      weight: 0.2,
-      speed: SPEED * 1.457,
-      seed: 53.9,
-      flavor: 0.35,
-    },
-    {
-      y: 0.665,
-      lens: 0.16,
-      spread: 0.042,
-      halfWidth: 0.72,
-      weight: 0.7,
+      y: 0.705,
+      lens: 0.155,
+      spread: 0.048,
+      halfWidth: 0.8,
+      weight: 0.78,
       speed: SPEED * 0.786,
       seed: 11.9,
+      fork: true,
       flavor: 0.9,
     },
     {
-      y: 0.735,
-      lens: 0.132,
-      spread: 0.02,
-      halfWidth: 0.44,
-      weight: 0.24,
-      speed: SPEED * 1.113,
-      seed: 67.1,
-      flavor: 0.75,
-    },
-    {
-      y: 0.805,
-      lens: 0.175,
-      spread: 0.05,
-      halfWidth: 0.95,
-      weight: 0.85,
+      y: 0.858,
+      lens: 0.118,
+      spread: 0.034,
+      halfWidth: 0.64,
+      weight: 0.42,
       speed: SPEED * 1.272,
       seed: 23.1,
+      fork: false,
       flavor: 0.3,
     },
-    {
-      y: 0.885,
-      lens: 0.095,
-      spread: 0.016,
-      halfWidth: 0.48,
-      weight: 0.3,
-      speed: SPEED * 0.703,
-      seed: 79.3,
-      flavor: 0.48,
-    },
   ],
-  maxBlur: 9,
-  blurExp: 4.2,
+  mark: 0.735,
+  markAlpha: 0.13,
+  markHalo: 0.032,
+  maxBlur: 12,
+  blurExp: 4.0,
   alpha: 0.27,
   hoverAlpha: 0.09,
   topFade: [0.18, 0.42],
@@ -158,66 +136,53 @@ const SETTINGS_FIELD: Field = {
   span: [1.1, 2.2],
   tracks: [
     {
-      y: 0.185,
-      lens: 0.13,
-      spread: 0.028,
-      halfWidth: 0.45,
-      weight: 0.26,
-      speed: SPEED * 1.113,
-      seed: 61.3,
-      flavor: 0.5,
-    },
-    {
-      y: 0.29,
+      y: 0.235,
       lens: 0.2,
-      spread: 0.06,
-      halfWidth: 0.78,
-      weight: 0.72,
+      spread: 0.085,
+      halfWidth: 0.6,
+      weight: 0.62,
       speed: SPEED * 0.786,
       seed: 3.1,
+      fork: false,
       flavor: 0.2,
     },
     {
-      y: 0.42,
+      y: 0.425,
       lens: 0.145,
-      spread: 0.062,
-      halfWidth: 0.95,
+      spread: 0.07,
+      halfWidth: 0.78,
       weight: 1,
       speed: SPEED * 1.272,
       seed: 8.7,
+      fork: true,
       flavor: 0.7,
     },
     {
-      y: 0.545,
-      lens: 0.1,
-      spread: 0.022,
-      halfWidth: 0.42,
-      weight: 0.22,
-      speed: SPEED * 1.618,
-      seed: 47.9,
-      flavor: 0.34,
-    },
-    {
-      y: 0.66,
+      y: 0.61,
       lens: 0.17,
-      spread: 0.05,
-      halfWidth: 0.8,
-      weight: 0.78,
-      speed: SPEED * 1,
+      spread: 0.056,
+      halfWidth: 0.66,
+      weight: 0.8,
+      speed: SPEED,
       seed: 17.5,
+      fork: true,
       flavor: 0.95,
     },
     {
-      y: 0.805,
+      y: 0.8,
       lens: 0.12,
-      spread: 0.036,
-      halfWidth: 0.6,
-      weight: 0.46,
-      speed: SPEED * 0.703,
+      spread: 0.042,
+      halfWidth: 0.58,
+      weight: 0.5,
+      speed: SPEED * 1.618,
       seed: 29.3,
+      fork: false,
       flavor: 0.4,
     },
   ],
+  mark: 0.62,
+  markAlpha: 0.15,
+  markHalo: 0.038,
   maxBlur: 13,
   blurExp: 2.6,
   alpha: 0.3,
@@ -227,6 +192,7 @@ const SETTINGS_FIELD: Field = {
 };
 
 const INK = "#dcf8e9";
+const MARK_INK = "#3ddc84";
 
 /** Time constant of the exponential hover glide, in seconds. */
 const HOVER_SMOOTHING = 0.22;
@@ -259,8 +225,8 @@ function rgb(hex: string): string {
 
 function trackCall(t: Track, index: number): string {
   const geom = `vec4(${f(t.y)}, ${f(t.lens)}, ${f(t.spread)}, ${f(t.halfWidth)} * uScale)`;
-  const mode = `vec3(${f(t.seed)}, ${f(t.weight)}, ${f(t.flavor)})`;
-  return `cov = max(cov, track(frag, W, H, soft, ${geom}, ${mode}, uPhase[${index}]));`;
+  const mode = `vec4(${f(t.seed)}, ${f(t.weight)}, ${f(t.flavor)}, ${t.fork ? "1.0" : "0.0"})`;
+  return `c = track(frag, W, H, soft, ${geom}, ${mode}, uPhase[${index}]); cov = c + cov * (1.0 - c);`;
 }
 
 function buildFragmentShader(p: Field): string {
@@ -275,8 +241,7 @@ uniform vec2  uRes;
 uniform float uScale;
 uniform float uHover;
 uniform float uIntro;
-uniform float uSeed;
-uniform float uPhase[${p.tracks.length}];
+uniform float uPhase[4];
 
 const float WRAP = ${f(WRAP)};
 
@@ -288,7 +253,11 @@ const vec2  SPAN = vec2(${f(p.span[0])}, ${f(p.span[1])});
 const float MID_STOP = 0.46;
 
 const vec3  INK = ${rgb(INK)};
+const vec3  MARK_INK = ${rgb(MARK_INK)};
 
+const float MARK = ${f(p.mark)};
+const float MARK_A = ${f(p.markAlpha)};
+const float MARK_HALO = ${f(p.markHalo)};
 const float MAX_BLUR = ${f(p.maxBlur)};
 const float BLUR_EXP = ${f(p.blurExp)};
 const float BASE_A = ${f(p.alpha)};
@@ -310,29 +279,37 @@ float hash21(vec2 p_) {
 }
 
 /**
- * One history track. Returns a single coverage in 0 to 1.
+ * One history track. Returns a single coverage in 0 to 1: the trunk, the
+ * diversion and its fork are composited source-over inside here, so strands that
+ * overlap near a branch point never sum past full and never band against a clamp.
  */
-float track(vec2 frag, float W, float H, float soft, vec4 geom, vec3 mode, float phase) {
+float track(vec2 frag, float W, float H, float soft, vec4 geom, vec4 mode, float phase) {
+  float yF = geom.x;
   float lensF = geom.y;
+  float spreadF = geom.z;
   float halfW = geom.w;
+  float weight = mode.y;
+  float flavor = mode.z;
+  float forkOn = mode.w;
 
   float lens = lensF * W;
   float u = frag.x / lens + phase;
   float cell = floor(u);
   float t = u - cell;
 
-  // uSeed is redrawn on every page load, so the history is a different one
-  // each time rather than the same fixed reel.
-  float key = mod(cell, WRAP) + mode.x + uSeed;
+  float key = mod(cell, WRAP) + mode.x;
   float r1 = hash11(key + 1.7);
   float r2 = hash11(key + 13.3);
   float r3 = hash11(key + 57.1);
   float r4 = hash11(key + 91.9);
   float r5 = hash11(key + 137.5);
+  float r6 = hash11(key + 211.3);
 
-  // The departure window. t0 is where the filament leaves the trunk and t1 where
-  // it comes back, so one expression yields both a stub that dies almost at once
-  // and a runner that holds for most of the cell. Squaring r2 biases the
+  float y0 = yF * H;
+
+  // The departure window. t0 is where the filament leaves the trunk and span how
+  // far it runs beside it, so one expression yields both a stub that dies almost
+  // at once and a runner that holds for most of the cell. Squaring r2 biases the
   // population toward the short ones.
   float ramp = 0.08 + 0.12 * r1;
   float t0 = 0.05 + 0.10 * r4;
@@ -344,41 +321,74 @@ float track(vec2 frag, float W, float H, float soft, vec4 geom, vec3 mode, float
   float s2 = 1.0 - x2 * x2 * (3.0 - 2.0 * x2);
   float w = s1 * s2;
   // Both shoulders are smoothsteps, so value and slope are zero at the cell
-  // edges and successive cells join with no crease. Between them the window sits
-  // at exactly one, which is what keeps every run flat.
+  // edges and successive cells join with no crease.
   float dwdt = (6.0 * x1 * (1.0 - x1) * s2 - 6.0 * x2 * (1.0 - x2) * s1) / ramp;
 
   // Below the threshold the branch point never opens at all.
-  float amp = geom.z * H * (0.40 + 0.60 * r3) * step(0.12, r1);
-  float side = sign(r5 - 0.5);
+  float amp = spreadF * H * (0.40 + 0.60 * r3) * step(0.12, r1);
 
-  float off = side * amp * w;
-  float slope = side * amp * dwdt / lens;
-  // Vertical distance corrected onto the curve normal, so the shoulders do not
-  // read as thicker than the flat runs.
+  // A slight taper along the run, so a diversion drifts a little further out or
+  // back in as it goes rather than holding one exact offset. It is linear on
+  // purpose: a straight angle reads as machined, where a wave would not.
+  float run = max(t1 - t0, 0.05);
+  float tilt = (r4 - 0.5) * 0.24;
+  float sway = 1.0 + tilt * clamp((t - t0) / run, 0.0, 1.0);
+  float dsway = tilt / run * (step(t0, t) - step(t1, t));
+
+  // A few diversions cross the trunk and carry on along the far side. The window
+  // is zero where the sign flip starts and ends, so nothing snaps.
+  float cross = step(0.93, r4);
+  float flip = mix(1.0, 1.0 - 2.0 * smoothstep(t0 + 0.10, t1 + ramp, t), cross);
+
+  float side = sign(r5 - 0.5);
+  float off = side * amp * w * sway * flip;
+  float slope = side * amp * (dwdt * sway + w * dsway) * flip / lens;
   float invS = inversesqrt(1.0 + slope * slope);
 
-  float y0 = geom.x * H;
   float trunkCov = 1.0 - smoothstep(halfW - soft, halfW + soft, abs(frag.y - y0));
   float divCov = 1.0 - smoothstep(halfW - soft, halfW + soft, abs(frag.y - (y0 + off)) * invS);
 
-  // How the diversion ends. Most simply stop partway. A graded one runs the full
-  // length of its window and stops dead at the end of it. A rejoined one is never
-  // cut at all, so it rides the closing shoulder back into the trunk.
-  float b = hash11(key + 211.3) + 0.10 * mode.z;
-  float rejoin = step(0.62, b) * (1.0 - step(0.86, b));
-  float graded = step(0.86, b);
-  float cut = mix(mix(t0 + (t1 - t0) * 0.55, t1 - 0.02, graded), 2.0, rejoin);
+  // What kind of event this is. The bands are nudged per track by flavor, so the
+  // four tracks show different mixes rather than one mix reseeded.
+  float b = r6 + 0.10 * flavor;
+  float rejoin = step(0.56, b) * (1.0 - step(0.78, b));
+  float graded = step(0.78, b) * (1.0 - step(0.93, b));
+  float handoff = step(0.93, b);
+  float lives = max(rejoin, handoff);
+
+  // A diversion that dies just cuts out partway. A graded one instead runs the
+  // full length of its window and stops dead at the end of it. One that rejoins
+  // or takes over the line never cuts out inside the cell at all.
+  float dieAt = mix(t0 + (t1 - t0) * 0.55, t1 - 0.02, graded);
+  float cut = mix(dieAt, 2.0, lives);
   float divA = 1.0 - smoothstep(cut, cut + mix(0.26, 0.06, graded), t);
 
-  // The strands are combined by taking the strongest, not by compositing them
-  // over one another. Because each coverage falls off with distance from its own
-  // curve, that is a union of distance fields: where the two coincide the union
-  // collapses to a single stroke of the usual width, and they part into two
-  // strokes only once they are genuinely apart. A branch point is therefore a
-  // clean Y with no seam, no gap and no bulge at the joint, and there is one ink
-  // level across the whole field so nothing steps in brightness where they meet.
-  return max(trunkCov, divCov * divA) * mode.y;
+  // The rewind: the trunk goes dark through the middle of the cell and the
+  // diversion, the one that held, carries the line instead. The dip closes
+  // before the cell ends so the trunk is continuous across the seam.
+  float hEnd = min(t1 + 0.14, 0.96);
+  float trunkA = 1.0 - handoff * 0.9 * smoothstep(t0 + 0.02, t0 + 0.22, t)
+                 * (1.0 - smoothstep(hEnd - 0.24, hEnd, t));
+
+  // A dead end that forked: a second filament leaves the diversion partway along
+  // and dies with it. It borrows the parent's normal correction, which is close
+  // enough at this stroke width to cost nothing visible.
+  float xs = clamp((t - (t0 + (t1 - t0) * 0.55)) / (ramp * 0.9), 0.0, 1.0);
+  float forkOff = off + side * amp * (0.40 + 0.22 * r3) * xs * xs * (3.0 - 2.0 * xs);
+  float forkA = forkOn * step(0.66, r5) * 0.6 * (1.0 - smoothstep(t1 - 0.16, t1 + 0.02, t));
+  float forkCov =
+    (1.0 - smoothstep(halfW - soft, halfW + soft, abs(frag.y - (y0 + forkOff)) * invS)) * forkA;
+
+  // The centre of this branch point in screen fractions. Both terms shift by the
+  // same amount when the phase wraps, so the pulse never jumps.
+  float q = ((cell + 0.5 - phase) * lensF - MARK) / 0.075;
+  float lift = 1.0 + 1.1 * exp(-q * q);
+
+  float aT = min(trunkCov * trunkA * lift, 1.0);
+  float aD = min(divCov * divA * lift * mix(0.58, 1.0, handoff) * (1.0 + 0.30 * graded), 1.0);
+  float aF = forkCov * 0.55;
+  float c = aD + aF * (1.0 - aD);
+  return (aT + c * (1.0 - aT)) * weight;
 }
 
 void main() {
@@ -401,11 +411,21 @@ void main() {
              + (1.0 - uIntro) * 16.0 * uScale;
 
   float cov = 0.0;
+  float c;
   ${p.tracks.map(trackCall).join("\n  ")}
 
+  float resolved = smoothstep(MARK + 0.05, MARK - 0.12, p.x);
   float topFade = smoothstep(TOP_FADE0, TOP_FADE1, p.y);
-  float a = cov * topFade * uIntro * (BASE_A + uHover * HOVER_A);
+  float a = cov * mix(0.28, 1.0, resolved) * topFade * uIntro
+          * (BASE_A + uHover * HOVER_A);
   vec3 col = mix(base, INK, clamp(a, 0.0, 1.0));
+
+  float mq = (p.x - MARK) * W / (1.15 * uScale);
+  float hq = (p.x - MARK) / 0.05;
+  float mv = smoothstep(TOP_FADE0, TOP_FADE1, p.y) * smoothstep(1.04, 0.74, p.y);
+  float ma = (exp(-mq * mq) * MARK_A + exp(-hq * hq) * MARK_HALO) * mv * uIntro
+           * (1.0 + 0.7 * uHover);
+  col = mix(col, MARK_INK, clamp(ma, 0.0, 1.0));
 
   col += (hash21(frag) - 0.5) * GRAIN;
 
@@ -490,16 +510,12 @@ export function initWaveCanvas(canvas: HTMLCanvasElement, host: HTMLElement): ()
   const uScale = gl.getUniformLocation(program, "uScale");
   const uHover = gl.getUniformLocation(program, "uHover");
   const uIntro = gl.getUniformLocation(program, "uIntro");
-  const uSeed = gl.getUniformLocation(program, "uSeed");
   const uPhase = gl.getUniformLocation(program, "uPhase");
 
-  gl.uniform1f(uSeed, Math.random() * 512);
-
-  const count = field.tracks.length;
-  const phases = new Float32Array(count);
-  // Every track starts somewhere different in its own history, so the field
-  // never opens on the same arrangement twice.
-  for (let i = 0; i < count; i++) phases[i] = Math.random() * WRAP;
+  const phases = new Float32Array(4);
+  // Stagger the starting offsets so the four tracks do not all branch at once
+  // on the very first frame.
+  for (let i = 0; i < 4; i++) phases[i] = i * 7.31;
 
   let widthPx = 1;
   let heightPx = 1;
@@ -553,7 +569,7 @@ export function initWaveCanvas(canvas: HTMLCanvasElement, host: HTMLElement): ()
     hoverMix += (hoverTarget - hoverMix) * (1 - Math.exp(-delta / HOVER_SMOOTHING));
     if (Math.abs(hoverTarget - hoverMix) < 0.001) hoverMix = hoverTarget;
     const rate = 1 + (field.hoverSpeed - 1) * hoverMix;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < 4; i++) {
       // Phase counts branch points, and the per-cell hash repeats every WRAP of
       // them, so subtracting WRAP returns an identical field with no seam.
       phases[i]! += delta * field.tracks[i]!.speed * rate;

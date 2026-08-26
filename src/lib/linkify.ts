@@ -4,9 +4,7 @@
  * GitHub URL the short `user/repo` label people actually recognise.
  */
 export type Segment =
-  | { kind: "text"; value: string }
-  | { kind: "link"; href: string; label: string }
-  | { kind: "code"; value: string };
+  { kind: "text"; value: string } | { kind: "link"; href: string; label: string };
 
 /** Bare `github.com/...` is matched too, since the copy rarely writes the scheme. */
 const URL_RE = /(https?:\/\/[^\s<>()]+|\bgithub\.com\/[^\s<>()]+)/gi;
@@ -14,15 +12,14 @@ const URL_RE = /(https?:\/\/[^\s<>()]+|\bgithub\.com\/[^\s<>()]+)/gi;
 /** A URL at the end of a sentence swallows the punctuation without this. */
 const TRAILING = /[.,;:!?]+$/;
 
-const CODE_RE = /`([^`]+)`/g;
-
 export function labelFor(href: string): string {
   const bare = href.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
   const github = bare.match(/^github\.com\/([^/]+)\/([^/]+)/i);
   return github ? `${github[1]}/${github[2]}` : bare;
 }
 
-function linkifyPlain(text: string, out: Segment[]): void {
+export function linkify(text: string): Segment[] {
+  const out: Segment[] = [];
   let last = 0;
 
   for (const match of text.matchAll(URL_RE)) {
@@ -41,19 +38,5 @@ function linkifyPlain(text: string, out: Segment[]): void {
   }
 
   if (last < text.length) out.push({ kind: "text", value: text.slice(last) });
-}
-
-export function linkify(text: string): Segment[] {
-  const out: Segment[] = [];
-  let last = 0;
-
-  for (const match of text.matchAll(CODE_RE)) {
-    const start = match.index ?? 0;
-    if (start > last) linkifyPlain(text.slice(last, start), out);
-    out.push({ kind: "code", value: match[1]! });
-    last = start + match[0].length;
-  }
-
-  if (last < text.length) linkifyPlain(text.slice(last), out);
   return out;
 }

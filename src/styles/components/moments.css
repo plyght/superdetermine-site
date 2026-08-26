@@ -1,6 +1,13 @@
 /* The moment field. A flat grid of captured states that runs to the edges of
    the card, oldest at the left. Colour is the only chrome: a verdict, or the
    absence of one. */
+.mfield-cmd {
+  font-family: var(--font-mono);
+  font-size: inherit;
+  letter-spacing: -0.02em;
+  color: var(--color-fg);
+}
+
 .mfield {
   position: relative;
   flex: 1 1 auto;

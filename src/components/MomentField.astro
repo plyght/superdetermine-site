@@ -51,11 +51,14 @@ for (const cell of cells) if (cell.verdict === "green") head = cell.i;
 ---
 
 <article class="relative flex min-h-[273px] flex-col overflow-hidden rounded-card bg-surface">
-  <header class="max-w-[460px] px-5 pb-6 pt-5 sm:px-6 sm:pt-6">
-    <h2 class="card-h">Every state, graded</h2>
-    <p class="card-lede">
-      sdt captures your worktree continuously and grades it, so <code>sdt green</code> returns the last
-      state that passed.
+  <header class="max-w-[440px] px-6 pb-5 pt-6">
+    <h2 class="text-[28px] font-semibold tracking-[-0.02em] text-white sm:text-[32px]">
+      Every state, graded
+    </h2>
+    <p class="mt-2 text-[14px] leading-[1.35] tracking-[-0.01em] text-muted">
+      sdt captures your worktree continuously and grades it, so <code class="mfield-cmd"
+        >sdt green</code
+      > returns the last state that passed.
     </p>
   </header>
 

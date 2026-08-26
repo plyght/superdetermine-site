@@ -6,35 +6,30 @@ import "../styles/components/capture.css";
 const FACTS = [
   {
     icon: "lucide:activity",
-    text: "Automatic on macOS, <code>sdt watch</code> on Linux",
+    text: "Automatic on macOS through launchd. <code>sdt watch</code> on Linux.",
   },
   {
     icon: "lucide:infinity",
-    text: "No staging area, no stash",
+    text: "No staging area, no stash, no save you can forget.",
+  },
+  {
+    icon: "lucide:rotate-ccw",
+    text: "A rewind captures the state you are leaving first.",
   },
   {
     icon: "lucide:undo-2",
-    text: "Any operation is reversible with <code>sdt undo</code>",
+    text: "<code>sdt undo</code> reverses any operation, repo wide.",
   },
 ];
 
 /**
- * One mark per captured state, every sixth one taller, so the whole lattice
- * repeats every six marks and the flow can wrap on an exact multiple of the
- * pitch. Seventy eight covers the widest stage at every pitch, plus six
- * pitches of overscan at each end.
+ * The still frame the page ships with: the playhead parked thirty nine minutes
+ * back, the states it left behind still on the tape, and the tape still
+ * recording at the live edge. The script picks it up from here.
  */
-const MARKS = Array.from({ length: 78 }, (_, k) => k);
-
-/**
- * The still frame the page ships with: the playhead parked around the middle of
- * the stage, every state it skipped past still lit on the tape, and the tape
- * still recording at the live edge. The park itself is `--head-offset` in the
- * stylesheet; these two describe the same frame to a screen reader and to the
- * eye, so they move together. The script picks it up from here.
- */
-const HEAD_OFFSET = 12;
-const READOUT = "-4 min";
+const HEAD_OFFSET = 26;
+const PIN_OFFSET = 5;
+const READOUT = "14:02 · 39 minutes back";
 ---
 
 <section
@@ -43,9 +38,9 @@ const READOUT = "-4 min";
 >
   <article class="capture-card rounded-card bg-surface">
     <header class="capture-copy">
-      <h2 class="card-h" style="--i: 0">Nothing is ever unsaved</h2>
-      <p class="card-lede" style="--i: 1">
-        Capture starts at <code>sdt init</code> and never stops.
+      <h2 style="--i: 0">Nothing is ever unsaved</h2>
+      <p style="--i: 1">
+        Capture starts at <code>sdt init</code> and never stops. The working copy is always a change.
       </p>
 
       <ul class="capture-facts" role="list">
@@ -60,42 +55,41 @@ const READOUT = "-4 min";
       </ul>
     </header>
 
-    <div class="tape" style="--i: 5" data-tape>
+    <div
+      class="tape"
+      style={`--i: 6; --head-offset: ${HEAD_OFFSET}; --pin-offset: ${PIN_OFFSET}`}
+      data-tape
+    >
+      <div class="tape-status">
+        <span class="tape-live-label">
+          <i class="tape-dot" aria-hidden="true"></i>
+          capture on · <b data-counter>1,284</b> moments
+        </span>
+        <span class="tape-readout" data-readout>{READOUT}</span>
+      </div>
+
       <div
         class="tape-stage"
         data-stage
-        tabindex="0"
-        role="slider"
-        aria-orientation="horizontal"
-        aria-label="Position on the capture tape"
-        aria-valuemin="0"
-        aria-valuemax="40"
-        aria-valuenow={HEAD_OFFSET}
-        aria-valuetext="Parked in the past, with every state captured since then still on the tape ahead of here"
+        role="img"
+        aria-label="A recording tape still capturing at its live edge, with the playhead pulled back thirty nine minutes and every state it left behind still on the tape"
       >
+        <div class="tape-flow" data-flow aria-hidden="true">
+          <div class="tape-rail"></div>
+          <div class="tape-major"></div>
+        </div>
+
         <div class="tape-baseline" aria-hidden="true"></div>
-
-        <div class="tape-marks" data-marks aria-hidden="true">
-          {MARKS.map((k) => <i class={k % 6 === 0 ? "is-major" : undefined} style={`--k: ${k}`} />)}
-        </div>
-
-        <div class="tape-kept" data-kept aria-hidden="true">
-          <div class="tape-marks is-lit" data-lit>
-            {
-              MARKS.map((k) => (
-                <i class={k % 6 === 0 ? "is-major" : undefined} style={`--k: ${k}`} />
-              ))
-            }
-          </div>
-        </div>
-
-        <div class="tape-exit" aria-hidden="true"></div>
+        <div class="tape-wake" data-wake aria-hidden="true"></div>
         <div class="tape-edge" aria-hidden="true"></div>
 
+        <div class="tape-pin" data-pin aria-hidden="true">
+          <Icon name="lucide:bookmark" />
+        </div>
+
         <div class="tape-playhead" data-playhead aria-hidden="true">
-          <span class="tape-handle" data-handle>
+          <span class="tape-grip">
             <Icon name="lucide:grip-vertical" />
-            <b data-readout>{READOUT}</b>
           </span>
         </div>
       </div>

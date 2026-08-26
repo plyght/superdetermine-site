@@ -4,14 +4,8 @@
    on the tape, which is the whole claim of the section. */
 .capture-card {
   display: grid;
-  gap: 24px;
-  padding: 20px;
-}
-
-@media (min-width: 640px) {
-  .capture-card {
-    padding: 24px;
-  }
+  gap: 28px;
+  padding: 24px;
 }
 
 .capture-copy {
@@ -20,193 +14,223 @@
   max-width: 460px;
 }
 
+.capture-copy h2 {
+  margin: 0;
+  color: var(--color-fg);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.capture-copy p {
+  max-width: 44ch;
+  margin: 10px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.capture-copy code,
+.capture-facts code {
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
 .capture-facts {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin: 20px 0 0;
+  gap: 12px;
+  margin: 22px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .capture-facts li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  color: var(--color-fg);
-  font-size: 15px;
+  color: var(--color-muted);
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  line-height: 1.35;
+  line-height: 1.25;
 }
 
 .capture-facts svg {
   width: 16px;
   height: 16px;
-  margin-top: 2px;
   flex: 0 0 auto;
   color: var(--color-fg);
-  opacity: 0.55;
+  opacity: 0.8;
 }
 
 /* ---- tape ---------------------------------------------------------------- */
 
-/* Below the two column breakpoint the tape runs the full width of the card,
-   padding included, so it reads as a length of tape passing behind the card
-   rather than as a block parked in the corner of it. `--mark-axis` drops the
-   lattice below centre there to leave the readout a lane of its own. */
 .tape {
   --pitch: 12px;
-  --head-offset: 12;
-  --pin-offset: 4;
-  --mark-axis: 57%;
+  --head-offset: 26;
+  --pin-offset: 5;
   display: flex;
   min-width: 0;
   flex-direction: column;
+  gap: 14px;
   justify-content: flex-end;
-  margin-inline: -20px;
 }
 
+.tape-status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--color-muted);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.tape-live-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.tape-live-label b {
+  color: var(--color-fg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.tape-dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--color-green);
+}
+
+.tape-readout {
+  color: var(--color-faint);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Every moving part is a `transform` on a leaf element, written straight onto
+   that element. Nothing here animates a layout property, and nothing writes a
+   custom property onto a shared ancestor, so the flowing rails are never
+   repainted mid travel and the 1px marks do not shimmer at any pixel ratio. */
 .tape-stage {
   position: relative;
   overflow: hidden;
-  height: 136px;
-  cursor: grab;
+  height: 184px;
+  cursor: ew-resize;
   touch-action: pan-y;
 }
 
-.tape-stage:active {
-  cursor: grabbing;
+/* Anchored to the right edge so the live end always lands on a whole tick,
+   whatever the stage width happens to be, with two pitches of slack on each
+   side for the flow to travel through. */
+.tape-flow {
+  position: absolute;
+  inset: 0 calc(var(--pitch) * -2);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
 
-.tape-stage:focus-visible {
-  outline: 2px solid var(--color-fg);
-  outline-offset: 4px;
-  border-radius: 4px;
+.tape-rail,
+.tape-major {
+  position: absolute;
+  inset: 0;
+  background-position: 100% 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+}
+
+.tape-rail {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--color-faint) 0 1px,
+    transparent 1px var(--pitch)
+  );
+  opacity: 0.46;
+}
+
+.tape-major {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--color-fg) 0 1px,
+    transparent 1px calc(var(--pitch) * 7)
+  );
+  opacity: 0.3;
 }
 
 .tape-baseline {
   position: absolute;
-  top: var(--mark-axis);
+  top: 50%;
   right: 0;
   left: 0;
   height: 1px;
   background: var(--color-hairline);
 }
 
-/* One element per captured state, sitting on whole pixels and never scaled or
-   masked, so translating the lattice cannot resample a hard edge. Marks are
-   right anchored with six pitches of overscan, which is also the period of the
-   major/minor pattern, so the flow wraps on an exact multiple of the pitch and
-   the seam lands mark for mark. */
-.tape-marks {
-  position: absolute;
-  inset: 0;
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
-}
-
-.tape-marks i {
-  position: absolute;
-  top: var(--mark-axis);
-  right: calc((var(--k) - 6) * var(--pitch));
-  width: 2px;
-  height: 20px;
-  border-radius: 1px;
-  margin-top: -10px;
-  background: var(--color-faint);
-  opacity: 0.8;
-}
-
-.tape-marks i.is-major {
-  height: 44px;
-  margin-top: -22px;
-  background: var(--color-muted);
-  opacity: 1;
-}
-
-/* Everything the rewind skipped past, from the playhead to the live edge. It is
-   lit, not dimmed and not removed: the second lattice inside it is the same
-   marks at full strength, laid exactly over the quiet ones. Anchored one stage
-   width to the right and slid back by the playhead offset, so its own width
-   never changes and the marks inside it need no width in their transform. */
-.tape-kept {
+/* Everything the rewind left behind. It is tinted, never removed. Sized at the
+   full stage width and slid in from the right so its width never changes. */
+.tape-wake {
   position: absolute;
   top: 0;
   bottom: 0;
   left: 100%;
-  overflow: hidden;
-  width: 200%;
+  width: 100%;
   background: var(--color-surface-strong);
   transform: translate3d(calc(var(--head-offset) * var(--pitch) * -1), 0, 0);
   will-change: transform;
 }
 
-.tape-marks.is-lit {
-  right: 100%;
-  left: auto;
-  width: 100%;
-  transform: translate3d(calc(var(--head-offset) * var(--pitch)), 0, 0);
-}
-
-.tape-marks.is-lit i {
-  background: var(--color-muted);
-  opacity: 1;
-}
-
-.tape-marks.is-lit i.is-major {
-  background: var(--color-fg);
-}
-
-/* The live edge. Capture is still running here while the playhead sits in the
-   past, which is the reason the kept span keeps growing. */
-.tape-edge {
+.tape-pin {
   position: absolute;
-  top: 0;
+  top: 12px;
   right: 0;
-  bottom: 0;
-  width: 3px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 999px;
+  margin-right: -13px;
   background: var(--color-green);
+  color: var(--color-ink);
+  opacity: var(--pin-opacity, 1);
+  transform: translate3d(calc(var(--pin-offset) * var(--pitch) * -1), 0, 0);
+  will-change: transform;
 }
 
-.tape-edge:before {
+.tape-pin svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tape-pin:after {
   position: absolute;
-  inset: -30px -26px;
+  top: 26px;
+  left: 50%;
+  width: 1px;
+  height: 22px;
   background: var(--color-green);
   content: "";
-  filter: blur(20px);
-  opacity: 0.26;
-}
-
-/* The left end of the window. History keeps going back past the card, so the
-   tape fades out into the card rather than being cut off at a wall. The card is
-   `--color-surface` composited over `--color-ink`, so the fade is painted as
-   those two ramps stacked in that order: at full strength they land on exactly
-   the card colour, with no seam and nothing to match by hand when the tokens
-   flip. It is a static sibling that never moves, so the flowing marks keep
-   their own composited texture. */
-.tape-exit {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: clamp(56px, 18%, 180px);
-  background:
-    linear-gradient(
-      to right,
-      var(--color-surface) 0,
-      color-mix(in srgb, var(--color-surface) 58%, transparent) 40%,
-      color-mix(in srgb, var(--color-surface) 18%, transparent) 72%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to right,
-      var(--color-ink) 0,
-      color-mix(in srgb, var(--color-ink) 58%, transparent) 40%,
-      color-mix(in srgb, var(--color-ink) 18%, transparent) 72%,
-      transparent 100%
-    );
-  pointer-events: none;
+  opacity: 0.5;
 }
 
 .tape-playhead {
@@ -222,84 +246,64 @@
   will-change: transform;
 }
 
-/* The readout rides the playhead instead of sitting in a corner, so the thing
-   that says where you are is the thing you grab. */
-.tape-handle {
+.tape-grip {
   position: absolute;
-  top: 8px;
+  top: 50%;
   left: 50%;
-  display: flex;
-  height: 28px;
-  align-items: center;
-  padding: 0 10px 0 3px;
+  display: grid;
+  width: 26px;
+  height: 54px;
+  place-items: center;
   border-radius: 999px;
-  gap: 2px;
   background: var(--color-fg);
   color: var(--color-ink);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  white-space: nowrap;
-  transform: translate(calc(-50% + var(--handle-shift, 0px)), 0);
-  box-shadow: 0 0 0 0 var(--color-surface-strong);
+  transform: translate(-50%, -50%);
 }
 
-.tape-stage:hover .tape-handle,
-.tape-stage:focus-visible .tape-handle {
-  box-shadow: 0 0 0 5px var(--color-surface-strong);
+.tape-grip svg {
+  width: 16px;
+  height: 16px;
 }
 
-.tape-handle b {
-  font-weight: 500;
+.tape-edge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-green);
 }
 
-.tape-handle svg {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-  opacity: 0.55;
+.tape-edge:before {
+  position: absolute;
+  inset: -30px -22px;
+  background: var(--color-green);
+  content: "";
+  filter: blur(20px);
+  opacity: 0.26;
 }
 
-@media (min-width: 640px) {
-  .tape {
-    --pitch: 16px;
-    margin-inline: -24px;
-  }
-  .tape-stage {
-    height: 168px;
-  }
+.tape-edge:after {
+  position: absolute;
+  top: 50%;
+  left: 1.5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-green);
+  content: "";
+  transform: translate(-50%, -50%);
 }
 
 @media (min-width: 1024px) {
-  .tape {
-    --pitch: 24px;
-    --mark-axis: 50%;
-    margin-inline: 0;
-  }
-  .tape-handle {
-    top: 50%;
-    height: 34px;
-    padding: 0 12px 0 5px;
-    gap: 3px;
-    transform: translate(calc(-50% + var(--handle-shift, 0px)), -50%);
-  }
-  .tape-handle svg {
-    width: 15px;
-    height: 15px;
-  }
   .capture-card {
     grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
     align-items: stretch;
     gap: 48px;
+    padding: 32px;
   }
-  .capture-copy {
-    justify-content: center;
-    padding-bottom: 8px;
-  }
-  .capture-facts {
-    padding-top: 8px;
+  .capture-copy h2 {
+    font-size: 32px;
   }
   .tape-stage {
     height: 216px;
@@ -309,6 +313,7 @@
 @media (min-width: 1440px) {
   .capture-card {
     gap: 72px;
+    padding: 40px;
   }
   .tape-stage {
     height: 248px;
@@ -317,9 +322,9 @@
 
 @media (prefers-reduced-motion: no-preference) {
   /* `backwards`, not `both`: a retained `filter` on the tape or on the section
-     around it would keep the flowing lattice inside a filtered subtree and cost
-     it its composited texture. The end state of the reveal is the natural state
-     anyway. */
+     around it would keep the flowing rails inside a filtered subtree and cost
+     them their composited texture, which shows up as a shimmer along the 1px
+     marks. The end state of the reveal is the natural state anyway. */
   .capture-section,
   .capture-copy h2,
   .capture-copy p,
@@ -337,7 +342,23 @@
   .tape {
     animation-duration: 0.9s;
   }
-  .tape-handle {
-    transition: box-shadow 0.25s var(--ease-reveal);
+  .tape-dot {
+    animation: tape-pulse 1.8s ease-in-out infinite;
+  }
+  .tape-edge:after {
+    animation: tape-pulse 1.8s ease-in-out infinite;
+  }
+  .tape-pin {
+    transition: opacity 0.35s var(--ease-reveal);
+  }
+}
+
+@keyframes tape-pulse {
+  0%,
+  to {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
   }
 }

@@ -87,6 +87,15 @@ html[data-theme="light"] [data-keep-dark] {
   --color-hairline: #ffffff14;
 }
 
+html[data-theme="light"] .buy-btn--white {
+  color: #fff;
+  background: #161615;
+}
+
+html[data-theme="light"] .buy-btn--white .buy-arrow {
+  color: #fff;
+}
+
 html[data-theme="light"] [data-wave-host] .buy-btn--hero {
   color: #080808;
   background: #fff;
@@ -94,6 +103,10 @@ html[data-theme="light"] [data-wave-host] .buy-btn--hero {
 
 html[data-theme="light"] [data-wave-host] .buy-btn--hero .buy-arrow {
   color: #080808;
+}
+
+html[data-theme="light"] .bottom-cta .buy-btn--white .buy-arrow {
+  color: #fff;
 }
 
 html[data-theme="light"] ::selection {
@@ -138,23 +151,6 @@ body {
   outline: 2px solid #ffffffe6;
 }
 
-/* An inline command. Set on a quiet raised chip so a command reads as a thing
-   you type rather than as emphasised prose. The padding is cloned across line
-   breaks so a wrapped command keeps its shape, and the size is relative so it
-   sits correctly in body copy and in a heading alike. */
-code {
-  padding: 0.16em 0.4em;
-  border-radius: 5px;
-  background: var(--color-surface-strong);
-  color: var(--color-fg);
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
 /* Links inside body copy. The site marks them by weight of colour against the
    muted prose around them rather than by a rule, the same way the nav and
    footer mark theirs. Defined here because more than one section needs it and
@@ -167,31 +163,6 @@ code {
 
 .prose-link:hover {
   opacity: 0.72;
-}
-
-.card-h {
-  margin: 0;
-  color: var(--color-fg);
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-  text-wrap: balance;
-}
-
-@media (min-width: 640px) {
-  .card-h {
-    font-size: 32px;
-  }
-}
-
-.card-lede {
-  max-width: 46ch;
-  margin: 12px 0 0;
-  color: var(--color-muted);
-  font-size: 15px;
-  letter-spacing: -0.01em;
-  line-height: 1.45;
 }
 
 .wave-canvas {

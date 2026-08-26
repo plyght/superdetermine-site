@@ -18,7 +18,7 @@ const { question, answer, index = 0 } = Astro.props;
   data-faq
 >
   <summary
-    class="faq-question flex cursor-pointer select-none items-start justify-between gap-5 p-5 text-[15px] font-medium leading-[1.35] tracking-[-0.01em] sm:p-6"
+    class="faq-question flex cursor-pointer select-none items-start justify-between gap-5 p-5 text-[15px] font-medium leading-[1.35] tracking-[-0.01em] sm:p-6 sm:text-[16px]"
   >
     <span>{question}</span>
     <span class="faq-plus mt-[2px] block shrink-0" aria-hidden="true">
@@ -28,7 +28,7 @@ const { question, answer, index = 0 } = Astro.props;
   <div class="faq-body" data-faq-body>
     <Prose
       text={answer}
-      class="faq-answer px-5 pb-5 text-[15px] leading-[1.6] tracking-[-0.01em] sm:px-6 sm:pb-6"
+      class="faq-answer px-5 pb-5 text-[14px] leading-[1.6] tracking-[-0.01em] sm:px-6 sm:pb-6"
     />
   </div>
 </details>

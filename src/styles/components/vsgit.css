@@ -7,15 +7,9 @@
   min-height: 273px;
   flex-direction: column;
   overflow: hidden;
-  padding: 20px;
+  padding: 24px;
   border-radius: var(--radius-card);
   background: var(--color-surface);
-}
-
-@media (min-width: 640px) {
-  .vsgit-card {
-    padding: 24px;
-  }
 }
 
 .vsgit-card--lead {
@@ -23,11 +17,21 @@
 }
 
 .vsgit-copy {
-  max-width: none;
+  max-width: 460px;
 }
 
-.vsgit-copy:has(.card-lede) {
-  max-width: 460px;
+.vsgit-h {
+  margin: 0;
+  color: var(--color-fg);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.06;
+}
+
+.vsgit-h--lead {
+  font-size: clamp(28px, 3vw, 38px);
+  letter-spacing: -0.03em;
 }
 
 .vsgit-h--lead span {
@@ -36,6 +40,14 @@
 
 .vsgit-copy:has(.vsgit-h--lead) {
   max-width: 620px;
+}
+
+.vsgit-line {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
 }
 
 /* Verdict tones resolve through tokens so both themes follow. */
@@ -83,7 +95,7 @@ html[data-theme="light"] .vsgit {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 /* Two lanes over the same span of time: four commits with a gap you have to
@@ -94,7 +106,7 @@ html[data-theme="light"] .vsgit {
   align-items: center;
   gap: 16px 16px;
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: 34px;
 }
 
 /* Both labels stretch to the same auto column, so the text is centred inside
@@ -187,7 +199,7 @@ html[data-theme="light"] .vsgit {
   justify-content: center;
   gap: clamp(20px, 6vw, 44px);
   margin-top: auto;
-  padding: 22px 0 6px;
+  padding: 26px 0 6px;
 }
 
 .vsgit-node {
@@ -217,7 +229,8 @@ html[data-theme="light"] .vsgit {
 }
 
 .vsgit-node svg.vsgit-mark {
-  transform: scale(0.8);
+  width: 24px;
+  height: 24px;
 }
 
 /* The wrapper carries the reveal, the svg carries the dimming, so the
@@ -239,7 +252,7 @@ html[data-theme="light"] .vsgit {
   display: grid;
   gap: 16px;
   margin: auto 0 0;
-  padding: 24px 0 0;
+  padding: 26px 0 0;
   list-style: none;
 }
 
@@ -286,27 +299,11 @@ html[data-theme="light"] .vsgit {
   opacity: var(--vg-glyph-faint);
 }
 
-@media (min-width: 1024px) {
-  .vsgit-card--lead .vsgit-copy {
-    display: flex;
-    max-width: none;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 64px;
-  }
-
-  .vsgit-card--lead .card-h {
-    max-width: 620px;
-  }
-
-  .vsgit-card--lead .card-lede {
-    max-width: 36ch;
-    margin: 0;
-    padding-top: 7px;
-  }
-}
-
 @media (max-width: 639px) {
+  .vsgit-card {
+    padding: 20px;
+  }
+
   .vsgit-lanes {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 10px 12px;
@@ -333,16 +330,6 @@ html[data-theme="light"] .vsgit {
   .vsgit-dest span,
   .vsgit-gate li {
     gap: 10px;
-  }
-}
-
-@media (max-width: 430px) {
-  .vsgit-lane--moments {
-    gap: 1px;
-  }
-
-  .vsgit-moment {
-    border-radius: 1px;
   }
 }
 

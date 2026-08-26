@@ -31,8 +31,8 @@
 }
 
 .buy-btn--white {
-  background: var(--color-white);
-  color: var(--color-black);
+  background: #fff;
+  color: #080808;
 }
 
 .buy-label {
@@ -78,7 +78,7 @@
 }
 
 .buy-btn--white .buy-arrow {
-  color: var(--color-black);
+  color: #080808;
 }
 
 .buy-arrow svg {

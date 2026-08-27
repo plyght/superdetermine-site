@@ -59,7 +59,7 @@
   --pitch: 12px;
   --head-offset: 12;
   --pin-offset: 4;
-  --mark-axis: 57%;
+  --mark-axis: 65%;
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -70,7 +70,7 @@
 .tape-stage {
   position: relative;
   overflow: hidden;
-  height: 136px;
+  height: 116px;
   cursor: grab;
   touch-action: pan-y;
 }
@@ -265,6 +265,7 @@
 @media (min-width: 640px) {
   .tape {
     --pitch: 16px;
+    --mark-axis: 57%;
     margin-inline: -24px;
   }
   .tape-stage {

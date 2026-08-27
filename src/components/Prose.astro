@@ -17,6 +17,8 @@ const segments = linkify(text);
         <a class="prose-link" href={segment.href} rel="noopener">
           {segment.label}
         </a>
+      ) : segment.kind === "code" ? (
+        <code>{segment.value}</code>
       ) : (
         segment.value
       ),

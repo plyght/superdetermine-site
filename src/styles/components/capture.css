@@ -51,20 +51,26 @@
 
 /* ---- tape ---------------------------------------------------------------- */
 
+/* Below the two column breakpoint the tape runs the full width of the card,
+   padding included, so it reads as a length of tape passing behind the card
+   rather than as a block parked in the corner of it. `--mark-axis` drops the
+   lattice below centre there to leave the readout a lane of its own. */
 .tape {
-  --pitch: 24px;
-  --head-offset: 22;
+  --pitch: 12px;
+  --head-offset: 12;
   --pin-offset: 4;
+  --mark-axis: 57%;
   display: flex;
   min-width: 0;
   flex-direction: column;
   justify-content: flex-end;
+  margin-inline: -20px;
 }
 
 .tape-stage {
   position: relative;
   overflow: hidden;
-  height: 184px;
+  height: 136px;
   cursor: grab;
   touch-action: pan-y;
 }
@@ -81,7 +87,7 @@
 
 .tape-baseline {
   position: absolute;
-  top: 50%;
+  top: var(--mark-axis);
   right: 0;
   left: 0;
   height: 1px;
@@ -102,14 +108,14 @@
 
 .tape-marks i {
   position: absolute;
-  top: 50%;
+  top: var(--mark-axis);
   right: calc((var(--k) - 6) * var(--pitch));
   width: 2px;
   height: 20px;
   border-radius: 1px;
   margin-top: -10px;
   background: var(--color-faint);
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .tape-marks i.is-major {
@@ -130,7 +136,7 @@
   bottom: 0;
   left: 100%;
   overflow: hidden;
-  width: 100%;
+  width: 200%;
   background: var(--color-surface-strong);
   transform: translate3d(calc(var(--head-offset) * var(--pitch) * -1), 0, 0);
   will-change: transform;
@@ -168,42 +174,39 @@
   inset: -30px -26px;
   background: var(--color-green);
   content: "";
-  filter: blur(22px);
-  opacity: 0.24;
+  filter: blur(20px);
+  opacity: 0.26;
 }
 
-/* The state the rewind left behind, captured on the way out. */
-.tape-pin {
+/* The left end of the window. History keeps going back past the card, so the
+   tape fades out into the card rather than being cut off at a wall. The card is
+   `--color-surface` composited over `--color-ink`, so the fade is painted as
+   those two ramps stacked in that order: at full strength they land on exactly
+   the card colour, with no seam and nothing to match by hand when the tokens
+   flip. It is a static sibling that never moves, so the flowing marks keep
+   their own composited texture. */
+.tape-exit {
   position: absolute;
-  top: 14px;
-  right: 0;
-  display: grid;
-  width: 24px;
-  height: 24px;
-  place-items: center;
-  border-radius: 999px;
-  margin-right: -12px;
-  background: var(--color-green);
-  color: var(--color-ink);
-  opacity: var(--pin-opacity, 1);
-  transform: translate3d(calc(var(--pin-offset) * var(--pitch) * -1), 0, 0);
-  will-change: transform;
-}
-
-.tape-pin svg {
-  width: 13px;
-  height: 13px;
-}
-
-.tape-pin:after {
-  position: absolute;
-  top: 24px;
-  left: 50%;
-  width: 1px;
-  height: 20px;
-  background: var(--color-green);
-  content: "";
-  opacity: 0.45;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: clamp(56px, 18%, 180px);
+  background:
+    linear-gradient(
+      to right,
+      var(--color-surface) 0,
+      color-mix(in srgb, var(--color-surface) 58%, transparent) 40%,
+      color-mix(in srgb, var(--color-surface) 18%, transparent) 72%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      var(--color-ink) 0,
+      color-mix(in srgb, var(--color-ink) 58%, transparent) 40%,
+      color-mix(in srgb, var(--color-ink) 18%, transparent) 72%,
+      transparent 100%
+    );
+  pointer-events: none;
 }
 
 .tape-playhead {
@@ -223,14 +226,14 @@
    that says where you are is the thing you grab. */
 .tape-handle {
   position: absolute;
-  top: 50%;
+  top: 8px;
   left: 50%;
   display: flex;
-  height: 34px;
+  height: 28px;
   align-items: center;
-  padding: 0 12px 0 5px;
+  padding: 0 10px 0 3px;
   border-radius: 999px;
-  gap: 3px;
+  gap: 2px;
   background: var(--color-fg);
   color: var(--color-ink);
   font-family: var(--font-mono);
@@ -239,7 +242,13 @@
   letter-spacing: -0.02em;
   line-height: 1;
   white-space: nowrap;
-  transform: translate3d(calc(-50% + var(--handle-shift, 0px)), -50%, 0);
+  transform: translate(calc(-50% + var(--handle-shift, 0px)), 0);
+  box-shadow: 0 0 0 0 var(--color-surface-strong);
+}
+
+.tape-stage:hover .tape-handle,
+.tape-stage:focus-visible .tape-handle {
+  box-shadow: 0 0 0 5px var(--color-surface-strong);
 }
 
 .tape-handle b {
@@ -247,21 +256,50 @@
 }
 
 .tape-handle svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   flex: 0 0 auto;
   opacity: 0.55;
 }
 
+@media (min-width: 640px) {
+  .tape {
+    --pitch: 16px;
+    margin-inline: -24px;
+  }
+  .tape-stage {
+    height: 168px;
+  }
+}
+
 @media (min-width: 1024px) {
+  .tape {
+    --pitch: 24px;
+    --mark-axis: 50%;
+    margin-inline: 0;
+  }
+  .tape-handle {
+    top: 50%;
+    height: 34px;
+    padding: 0 12px 0 5px;
+    gap: 3px;
+    transform: translate(calc(-50% + var(--handle-shift, 0px)), -50%);
+  }
+  .tape-handle svg {
+    width: 15px;
+    height: 15px;
+  }
   .capture-card {
     grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
     align-items: stretch;
     gap: 48px;
   }
+  .capture-copy {
+    justify-content: center;
+    padding-bottom: 8px;
+  }
   .capture-facts {
-    margin-top: auto;
-    padding-top: 20px;
+    padding-top: 8px;
   }
   .tape-stage {
     height: 216px;
@@ -299,16 +337,7 @@
   .tape {
     animation-duration: 0.9s;
   }
-  .tape-pin {
-    transition: opacity 0.35s var(--ease-reveal);
-  }
   .tape-handle {
-    transition:
-      box-shadow 0.25s var(--ease-reveal),
-      scale 0.25s var(--ease-reveal);
-  }
-  .tape-stage:hover .tape-handle,
-  .tape-stage:focus-visible .tape-handle {
-    scale: 1.06;
+    transition: box-shadow 0.25s var(--ease-reveal);
   }
 }

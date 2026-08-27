@@ -25,3 +25,5 @@ node_modules/
 
 # superdetermine internal store
 .sdt/
+.vercel
+.env*

@@ -187,7 +187,7 @@ html[data-theme="light"] .vsgit {
   justify-content: center;
   gap: clamp(20px, 6vw, 44px);
   margin-top: auto;
-  padding: 24px 0 0;
+  padding: 22px 0 6px;
 }
 
 .vsgit-node {
@@ -217,8 +217,7 @@ html[data-theme="light"] .vsgit {
 }
 
 .vsgit-node svg.vsgit-mark {
-  width: 24px;
-  height: 24px;
+  transform: scale(0.8);
 }
 
 /* The wrapper carries the reveal, the svg carries the dimming, so the
@@ -334,6 +333,16 @@ html[data-theme="light"] .vsgit {
   .vsgit-dest span,
   .vsgit-gate li {
     gap: 10px;
+  }
+}
+
+@media (max-width: 430px) {
+  .vsgit-lane--moments {
+    gap: 1px;
+  }
+
+  .vsgit-moment {
+    border-radius: 1px;
   }
 }
 

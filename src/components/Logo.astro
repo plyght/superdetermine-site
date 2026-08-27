@@ -1,5 +1,5 @@
 ---
-import { MARK_PATH, MARK_VIEWBOX } from "../brand";
+import { MARK_INK_VIEWBOX, MARK_PATH } from "../brand";
 
 interface Props {
   class?: string;
@@ -12,9 +12,9 @@ const { class: className = "size-[22px] text-white" } = Astro.props;
      `:where(svg:not([width]):not([height]))` first-paint fallback from
      overriding the sizing utilities, which live in @layer utilities. -->
 <svg
-  viewBox={MARK_VIEWBOX}
-  width="400"
-  height="400"
+  viewBox={MARK_INK_VIEWBOX}
+  width="343"
+  height="311"
   fill="none"
   class={className}
   aria-hidden="true"

@@ -22,10 +22,11 @@
 /* One value the reader can swap, not a set of tabs: a single control holding
    the current answer, with the swap arrows as its affordance. */
 .wr-swap {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 6px 11px;
+  padding: 8px 12px;
   border: 0;
   border-radius: 999px;
   background: var(--color-surface-strong);
@@ -35,6 +36,12 @@
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.16s var(--ease-reveal);
+}
+
+.wr-swap:after {
+  position: absolute;
+  inset: -7px;
+  content: "";
 }
 
 .wr-swap:hover {
@@ -58,6 +65,12 @@
   margin-left: auto;
   color: var(--color-muted);
   white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .wr-meta {
+    margin-left: 0;
+  }
 }
 
 .wr-axes {

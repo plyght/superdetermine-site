@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import Nav from "../components/Nav.astro";
 import { Agentation } from "agentation";
+import Analytics from "@vercel/analytics/astro";
 
 interface Props {
   title: string;
@@ -129,5 +130,6 @@ const ogImage = new URL("/og/superdetermine-og.png", Astro.site).href;
       <slot />
     </div>
     {import.meta.env.DEV && <Agentation client:only="react" />}
+    <Analytics />
   </body>
 </html>

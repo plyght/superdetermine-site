@@ -98,15 +98,15 @@ const svg = await satori(
           lineHeight: 1.08,
         }}
       >
-        <span>Rewind to the last state of</span>
+        <span>sdt keeps your code</span>
         <span style={{ display: "flex" }}>
           {/* satori lays sibling spans out with no gap, so the word space has to be a margin. */}
-          <span style={{ marginRight: "0.26em" }}>your code that</span>
-          <span style={{ color: GREEN }}>actually passed.</span>
+          <span style={{ marginRight: "0.26em" }}>in</span>
+          <span style={{ color: GREEN }}>superposition.</span>
         </span>
       </div>
       <span style={{ fontFamily: "JetBrains Mono", fontSize: "23px", color: MUTED }}>
-        sdt green · version control that records what worked
+        Every state captured. The green ones found.
       </span>
     </div>
 

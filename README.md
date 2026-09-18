@@ -1,7 +1,8 @@
 # superdetermine.com
 
-The marketing site for [`sdt`](https://github.com/plyght/superdetermine), a version
-control system that records which states of your code actually worked.
+sdt keeps your code in superposition.
+
+The marketing site for [`sdt`](https://github.com/plyght/superdetermine).
 
 Astro, Tailwind v4, static output.
 

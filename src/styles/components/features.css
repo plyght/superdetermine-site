@@ -26,6 +26,7 @@
 
 .feature-label {
   color: var(--color-fg);
+  text-wrap: balance;
   opacity: 0.85;
 }
 

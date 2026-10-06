@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  container-type: inline-size;
 }
 
 .wr-ask {
@@ -70,8 +71,10 @@
 /* Narrow enough that the row cannot hold the question, the control and the
    meta on one line. Rather than let them wrap into three ragged lines, the
    question takes a line of its own and the control and the meta share the next
-   one, left and right, the same pair of edges the axes below already use. */
-@media (max-width: 639px) {
+   one, left and right, the same pair of edges the axes below already use. Read
+   from the card rather than the window, because the card is narrow both on a
+   phone and in the two column grid on a tablet. */
+@container (max-width: 440px) {
   .wr-ask {
     gap: 14px 10px;
   }
@@ -161,6 +164,18 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   line-height: 1;
+}
+
+/* On a narrow card the value sits beside the name and the note takes the full
+   width under both, so a long note reads on one line instead of three. */
+@container (max-width: 360px) {
+  .wr-value {
+    grid-row: 1;
+  }
+
+  .wr-note {
+    grid-column: 2 / -1;
+  }
 }
 
 /* Reveals resolve focus, never position. Nothing moves. */

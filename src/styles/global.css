@@ -185,6 +185,13 @@ code {
   }
 }
 
+/* Body copy never leaves one word stranded on its last line. */
+p,
+li,
+summary {
+  text-wrap: pretty;
+}
+
 .card-lede {
   max-width: 46ch;
   margin: 12px 0 0;

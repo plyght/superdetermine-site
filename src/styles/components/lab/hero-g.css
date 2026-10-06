@@ -1,0 +1,87 @@
+/* Option G: the code orbital, dithered. Everything the canvas draws comes from
+   this flat palette and nothing else: shading is only ever a dither between two
+   of these colours. The card's flat ink is the pre-paint look and the fallback
+   when WebGL is unavailable. */
+.hg-host {
+  /* Night: ultramarine ink, coral and periwinkle for the two signs of psi. */
+  --hg-ink: #0b0c22;
+  --hg-deep: #252c78;
+  --hg-a: #ff6a55;
+  --hg-b: #7c8cff;
+  --hg-light: #f3eee4;
+  --hg-pass: #4be38d;
+  /* Where the nucleus sits, as fractions of the card. */
+  --hg-cx: 0.76;
+  --hg-cy: 0.63;
+  /* Radius of the outer lobes, as a fraction of the card height. */
+  --hg-r: 0.62;
+  /* One art pixel, in CSS pixels. */
+  --hg-cell: 3;
+  background: var(--hg-ink);
+}
+
+/* Phosphor: amber and cyan on graphite, a terminal at night. */
+.hg-host[data-palette="phosphor"] {
+  --hg-ink: #0d0f0f;
+  --hg-deep: #233236;
+  --hg-a: #ffb23e;
+  --hg-b: #3fcfd8;
+  --hg-light: #f4f0e2;
+  --hg-pass: #8df06a;
+}
+
+/* Brand: the site's own greens, lime and teal for the signs, white on pass. */
+.hg-host[data-palette="brand"] {
+  --hg-ink: #04140c;
+  --hg-deep: #0d3d25;
+  --hg-a: #c8f36a;
+  --hg-b: #2ec4b6;
+  --hg-light: #effff5;
+  --hg-pass: #3ddc84;
+}
+
+@media (max-width: 639px) {
+  .hg-host {
+    --hg-cx: 0.68;
+    --hg-cy: 0.58;
+    --hg-r: 0.38;
+  }
+}
+
+.hg-canvas {
+  image-rendering: pixelated;
+  opacity: 0;
+  animation: hg-canvas-in 600ms var(--ease-reveal) 60ms forwards;
+}
+
+/* The words sit on the flat ink, so they take the palette's paper white. */
+.hg-host .hg-headline,
+.hg-host .hg-mark {
+  color: var(--hg-light);
+}
+
+.hg-host .hg-mark :is(svg, span) {
+  color: var(--hg-light);
+}
+
+html .hg-host[data-hg-host] .buy-btn.buy-btn--hero {
+  background: var(--hg-light);
+  color: var(--hg-ink);
+}
+
+html .hg-host[data-hg-host] .buy-btn.buy-btn--hero .buy-arrow {
+  color: var(--hg-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hg-canvas {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes hg-canvas-in {
+  to {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,58 @@
+---
+import BuyButton from "../BuyButton.astro";
+import Logo from "../Logo.astro";
+import "../../styles/components/lab/hero-g.css";
+---
+
+<div class="mx-auto w-full max-w-[1560px] px-5 sm:px-8 lg:px-14">
+  <section
+    data-wave-host
+    data-keep-dark
+    data-hg-host
+    class="hg-host group relative isolate overflow-hidden rounded-card"
+  >
+    <!-- The orbital, drawn on a coarse pixel grid through an ordered dither.
+         The card's flat ink is the pre-paint look and the fallback when WebGL
+         is unavailable; the shader repaints it as its base. -->
+    <canvas data-hg class="hg-canvas absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
+
+    <div
+      class="relative z-20 flex min-h-[680px] flex-col justify-between gap-10 p-6 sm:min-h-[520px] sm:p-8"
+    >
+      <h1
+        class="hg-headline max-w-[900px] text-[clamp(36px,6.9vw,66px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white"
+        data-hero-headline
+      >
+        superdetermine is a version control system, keeping code in superposition.
+      </h1>
+
+      <div class="flex flex-wrap items-end justify-between gap-4" data-hg-foot>
+        <div class="hg-mark mb-3 flex flex-col gap-6" data-hg-mark>
+          <Logo class="size-9 text-white" />
+          <span class="text-[20px] font-semibold tracking-[-0.02em] text-white">superdetermine</span
+          >
+        </div>
+
+        <BuyButton variant="hero" />
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  import { initHeroG } from "../../scripts/lab/heroG";
+  import { initHeroHeadline } from "../../scripts/heroHeadline";
+
+  const teardowns: Array<() => void> = [];
+
+  document.querySelectorAll<HTMLCanvasElement>("canvas[data-hg]").forEach((canvas) => {
+    const host = canvas.closest<HTMLElement>("[data-hg-host]") ?? canvas.parentElement;
+    if (host) teardowns.push(initHeroG(canvas, host));
+  });
+
+  initHeroHeadline();
+
+  document.addEventListener("astro:before-swap", () => {
+    while (teardowns.length) teardowns.pop()?.();
+  });
+</script>

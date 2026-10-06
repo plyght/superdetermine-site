@@ -1,0 +1,37 @@
+/* Option D: the path integral. The card carries a deep field gradient that the
+   shader repaints as its own base, so a missing WebGL2 context simply leaves the
+   gradient standing. The shader reads every colour it uses from here. */
+.hero-d {
+  --hd-stop-0: #0e5132;
+  --hd-stop-1: #06301c;
+  --hd-stop-2: #03150c;
+  --hd-teal: #38c9d6;
+  --hd-mint: #5ee6a0;
+  --hd-lime: #ccf575;
+  --hd-pass: #3ddc84;
+  --hd-white: #eefff5;
+  background: radial-gradient(
+    125% 150% at 62% 72%,
+    var(--hd-stop-0) 0%,
+    var(--hd-stop-1) 44%,
+    var(--hd-stop-2) 100%
+  );
+}
+
+.hero-d-canvas {
+  opacity: 0;
+  animation: hero-d-in 800ms var(--ease-reveal) 60ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-d-canvas {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes hero-d-in {
+  to {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,65 @@
+---
+import BuyButton from "../BuyButton.astro";
+import Logo from "../Logo.astro";
+import "../../styles/components/lab/hero-a.css";
+---
+
+<div class="mx-auto w-full max-w-[1560px] px-5 sm:px-8 lg:px-14">
+  <section
+    data-wave-host
+    data-keep-dark
+    data-hero-a
+    class="hero-a group relative isolate overflow-hidden rounded-card"
+  >
+    <!-- The superposed field. Two layers: every alternative a token could be
+         lives on the soft layer, and whatever a measurement resolves is drawn
+         on the sharp one, so collapsing reads as a change of focus. -->
+    <canvas data-hero-a-ghost class="hero-a-canvas hero-a-ghost" aria-hidden="true"></canvas>
+    <canvas data-hero-a-sharp class="hero-a-canvas hero-a-sharp" aria-hidden="true"></canvas>
+
+    <div
+      class="pointer-events-none absolute inset-0 z-10 rounded-card ring-1 ring-inset ring-white/10"
+    >
+    </div>
+
+    <div
+      class="relative z-20 flex min-h-[600px] flex-col justify-between gap-10 p-6 sm:min-h-[520px] sm:p-8"
+    >
+      <h1
+        class="max-w-[900px] text-[clamp(36px,6.9vw,66px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_1px_12px_rgba(0,20,10,0.45)]"
+        data-hero-headline
+      >
+        superdetermine is a version control system, keeping code in superposition.
+      </h1>
+
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="mb-3 flex flex-col gap-6" data-hero-a-avoid>
+          <Logo class="size-9 text-white drop-shadow-[0_2px_8px_rgba(0,20,10,0.45)]" />
+          <span class="text-[20px] font-semibold tracking-[-0.02em] text-white">superdetermine</span
+          >
+        </div>
+
+        <div data-hero-a-avoid>
+          <BuyButton variant="hero" />
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  import { initHeroA } from "../../scripts/lab/heroA";
+  import { initHeroHeadline } from "../../scripts/heroHeadline";
+
+  const teardowns: Array<() => void> = [];
+
+  document.querySelectorAll<HTMLElement>("[data-hero-a]").forEach((host) => {
+    teardowns.push(initHeroA(host));
+  });
+
+  initHeroHeadline();
+
+  document.addEventListener("astro:before-swap", () => {
+    while (teardowns.length) teardowns.pop()?.();
+  });
+</script>

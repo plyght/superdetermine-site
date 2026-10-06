@@ -1,0 +1,32 @@
+/* Option E: the quantum carpet. The card carries a deep field gradient that
+   the shader repaints as its own base, so a missing WebGL context simply leaves
+   the gradient standing. The shader reads the same stops from here. */
+.carpet-host {
+  --carpet-stop-0: #0c4a2b;
+  --carpet-stop-1: #062d1a;
+  --carpet-stop-2: #03140c;
+  background: radial-gradient(
+    120% 150% at 72% 64%,
+    var(--carpet-stop-0) 0%,
+    var(--carpet-stop-1) 46%,
+    var(--carpet-stop-2) 100%
+  );
+}
+
+.carpet-canvas {
+  opacity: 0;
+  animation: carpet-canvas-in 900ms var(--ease-reveal) 60ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carpet-canvas {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes carpet-canvas-in {
+  to {
+    opacity: 1;
+  }
+}

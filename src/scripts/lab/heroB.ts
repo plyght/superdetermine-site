@@ -8,10 +8,10 @@
  * |psi|^2, so wherever two futures overlap they interfere and lay down fringes,
  * exactly as a multi slit does, and the hue of the light follows arg(psi).
  *
- * Measurement collapses the field. On a timed loop, or wherever the pointer
- * sits over the fan, every possible future is drawn toward one path and fades
- * while that path resolves into a single sharp trunk: the state that passed.
- * Then the field decoheres and spreads again.
+ * Measurement collapses the field. On a slow timed loop every possible future
+ * is drawn toward one path and fades while that path resolves into a single
+ * sharp trunk: the state that passed. Then the field decoheres and spreads
+ * again. The loop runs on its own; it does not answer the pointer.
  */
 
 const MAX_DPR = 2;
@@ -19,21 +19,19 @@ const MAX_DPR = 2;
 const INTRO_DELAY_MS = 120;
 const INTRO_DURATION_MS = 1100;
 
-/** Seconds per phase of the measurement loop. */
-const SPREAD_FIRST = 3.4;
-const SPREAD = 5.2;
-const COLLAPSE = 0.85;
-const HOLD = 1.8;
-const RELEASE = 2.6;
+/**
+ * Seconds per phase of the measurement loop. The collapse is unhurried and the
+ * spread that follows it is slower still, so the field decoheres rather than
+ * snapping back open.
+ */
+const SPREAD_FIRST = 4.2;
+const SPREAD = 8;
+const COLLAPSE = 2.8;
+const HOLD = 2.6;
+const RELEASE = 4.4;
 
-/** Pointer measurement glide, in seconds, toward and away from collapse. */
-const POINTER_IN = 0.16;
-const POINTER_OUT = 0.45;
-
-/** How long a tap holds its measurement on touch screens, in seconds. */
-const TAP_HOLD = 1.6;
-
-const TRIGGER_SELECTOR = "[data-wave-trigger], .buy-btn";
+/** Scales every future's phase drift, so the fringes wander rather than race. */
+const DRIFT = 0.55;
 
 /**
  * The possible futures. `u` is the tilt as a fraction of the fan's half-angle,
@@ -88,7 +86,6 @@ uniform float uPhi[N];
 uniform vec3  uWin;
 uniform float uCollapse;
 uniform vec3  uFade;
-uniform vec3  uDetect;
 uniform float uIntro;
 
 const vec2  ORIGIN = vec2(0.20, 0.66);
@@ -149,8 +146,10 @@ void main() {
       psi += b;
       inc += dot(b, b);
     }
-    // The measured state: one sharp path that does not spread.
-    vec2 b = beam(fdx, dy, uWin.x, 0.0, uWin.y, uWin.z, 0.0, 0.0);
+    // The measured state: one sharp path that does not spread. It eases off
+    // with distance from the present, so it never reads as a ruled line.
+    float winAmp = uWin.y * (1.0 - 0.35 * smoothstep(0.0, 0.7 * uRes.x, fdx));
+    vec2 b = beam(fdx, dy, uWin.x, 0.0, winAmp, uWin.z, 0.0, 0.0);
     psi += b;
     inc += dot(b, b);
   }
@@ -163,10 +162,10 @@ void main() {
 
   // A travelling carrier. Wavefronts ring outward from the present, so the
   // density visibly propagates instead of standing still like a light beam.
-  float carrier = 0.21 * r / uScale - uTime * 3.0;
-  float ripple = 1.0 + 0.18 * cos(carrier) * (1.0 - c);
+  float carrier = 0.19 * r / uScale - uTime * 1.5;
+  float ripple = 1.0 + 0.14 * cos(carrier) * (1.0 - c);
 
-  float future = ((0.8 * coherent + 0.5 * inc) * ripple + cloud) * gate;
+  float future = ((0.68 * coherent + 0.45 * inc) * ripple + cloud) * gate;
 
   // The past. One settled trunk, softening into haze toward the left edge.
   float left = clamp(-dx / max(uOrigin.x, 1.0), 0.0, 1.0);
@@ -180,7 +179,7 @@ void main() {
   // across the present so the measured path reads as one continuous line.
   float wd = (dy - uWin.x * max(dx, 0.0)) / (13.0 * uScale);
   float pastBloom = 0.03 * exp(-pg * pg) * (1.0 - left);
-  float winBloom = (0.03 + 0.08 * uWin.y * uWin.y) * exp(-wd * wd) * min(uWin.y * 3.0, 1.0);
+  float winBloom = (0.03 + 0.035 * uWin.y * uWin.y) * exp(-wd * wd) * min(uWin.y * 3.0, 1.0);
   glow = mix(pastBloom, winBloom, smoothstep(-40.0 * uScale, 40.0 * uScale, dx));
 
   // The present: a soft node where history becomes possibility.
@@ -196,17 +195,8 @@ void main() {
   vec3 hue = mix(TEAL, MINT, 0.5 + 0.5 * cos(arg));
   hue = mix(hue, LIME, 0.32 * smoothstep(0.2, 1.0, sin(arg)));
   hue = mix(hue, MINT, 1.0 - gate);
-  hue = mix(hue, WHITE, clamp(0.5 * c + smoothstep(0.5, 1.0, L) * 0.6, 0.0, 1.0));
-
-  // The apparatus: a brief click where the measurement lands.
-  vec2 dd = frag - uDetect.xy;
-  float ds = 4.0 * uScale;
-  float click = exp(-dot(dd, dd) / (2.0 * ds * ds));
-  float halo = exp(-dot(dd, dd) / (2.0 * 30.0 * 30.0 * uScale * uScale));
-  float sx = dd.x / (0.9 * uScale);
-  float sy = dd.y / (64.0 * uScale);
-  float screen = exp(-sx * sx) * exp(-sy * sy);
-  float det = uDetect.z * (0.95 * click + 0.18 * halo + 0.3 * screen);
+  hue = mix(hue, MINT, 0.6 * c);
+  hue = mix(hue, WHITE, clamp(0.2 * c + smoothstep(0.6, 1.0, L) * 0.4, 0.0, 1.0));
 
   // Clear of the headline: faded beneath it, free to bloom beyond its end.
   float topFade = max(
@@ -214,11 +204,9 @@ void main() {
     smoothstep(uFade.z, uFade.z + 180.0 * uScale, frag.x) * smoothstep(0.0, 60.0 * uScale, frag.y)
   );
   float a = clamp((L * 0.94 + node) * topFade * uIntro, 0.0, 1.0);
-  float d = clamp(det * topFade * uIntro, 0.0, 1.0);
 
   // Screen blend, so the light adds to the field without ever flattening it.
   vec3 col = 1.0 - (1.0 - base) * (1.0 - hue * a);
-  col = 1.0 - (1.0 - col) * (1.0 - WHITE * d);
 
   col += (hash21(frag) - 0.5) * GRAIN;
   gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
@@ -245,7 +233,8 @@ function readStop(host: HTMLElement, name: string, fallback: string): [number, n
   return [((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255];
 }
 
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+/** Quintic smootherstep: zero velocity and acceleration at both ends. */
+const smoother = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
 type Phase = "spread" | "collapse" | "hold" | "release";
@@ -319,7 +308,6 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     win: loc("uWin"),
     collapse: loc("uCollapse"),
     fade: loc("uFade"),
-    detect: loc("uDetect"),
     intro: loc("uIntro"),
     time: loc("uTime"),
     fan: loc("uFan"),
@@ -333,7 +321,6 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   const headline = host.querySelector<HTMLElement>("[data-hero-headline]");
   const foot = host.querySelector<HTMLElement>("[data-psi-foot]");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const coarse = window.matchMedia("(pointer: coarse)");
 
   // Lab only: `?psi=0.6` pins the collapse at that value for screenshots.
   const pinned = Number.parseFloat(new URLSearchParams(location.search).get("psi") ?? "");
@@ -356,19 +343,9 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   let phase: Phase = "spread";
   let phaseT = 0;
   let spreadFor = SPREAD_FIRST;
-  let autoTheta = 0;
-  let autoDetX = 0.7;
-  let autoC = 0;
-
-  let pointerOn = false;
-  let pointerC = 0;
-  let pointerTheta = 0;
-  let pointerX = 0;
-  let pointerY = 0;
-  let tapUntil = 0;
-  let triggerHeld = false;
-
-  let flashAge = 99;
+  let winTheta = 0;
+  let lastWinner = -1;
+  let collapse = 0;
 
   const theta = new Float32Array(N);
   const amp = new Float32Array(N);
@@ -395,17 +372,21 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   }
 
   function pickWinner(): void {
-    // Weighted toward the stronger futures, never the faint outer ones.
+    // One of the central futures, weighted toward the stronger ones, so the
+    // passing trunk never climbs into the headline or dives at the foot. It
+    // never repeats the last pick, so successive measurements land apart.
+    const pool = [2, 3, 4, 5, 6].filter((k) => k !== lastWinner);
     let total = 0;
-    for (const b of BEAMS) total += b.a * b.a;
+    for (const k of pool) total += BEAMS[k]!.a * BEAMS[k]!.a;
     let r = Math.random() * total;
-    let k = 0;
-    for (; k < N - 1; k++) {
+    let pick = pool[0]!;
+    for (const k of pool) {
+      pick = k;
       r -= BEAMS[k]!.a * BEAMS[k]!.a;
       if (r <= 0) break;
     }
-    autoTheta = baseTheta(k);
-    autoDetX = 0.5 + Math.random() * 0.32;
+    lastWinner = pick;
+    winTheta = baseTheta(pick);
   }
 
   function measureLayout(): void {
@@ -425,7 +406,7 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
 
     // The present sits in the clear band between the headline and the foot,
     // with history arriving from the left and the futures fanning right.
-    const oxCss = narrow ? cssW * 0.12 : cssW * 0.3;
+    const oxCss = cssW * 0.3;
     const oyCss = textBottom + Math.max(footTop - textBottom, 40) * 0.5;
     const len = Math.max(cssW - oxCss, 1);
     const spreadCss = narrow ? cssH * 0.24 : cssH * 0.4;
@@ -439,42 +420,29 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   }
 
   function updateBeams(): { c: number; win: number } {
-    // The pointer measures wherever it sits over the fan.
-    if (pin !== null) autoTheta = baseTheta(3);
-    const pc = pointerC;
-    const c = pin !== null ? pin : Math.max(autoC, pc);
-    const weight = pc / (pc + autoC + 1e-4);
-    const win = autoTheta + (pointerTheta - autoTheta) * weight;
-    const ce = easeInOut(clamp(c, 0, 1));
+    if (pin !== null) winTheta = baseTheta(3);
+    const c = pin !== null ? pin : collapse;
+    const win = winTheta;
+    // The futures lean in toward the measured path a little ahead of fading,
+    // so by the time they are close enough to beat against it they are gone.
+    const lean = smoother(clamp(c * 1.35, 0, 1));
 
     for (let k = 0; k < N; k++) {
       const b = BEAMS[k]!;
       const free = baseTheta(k);
-      theta[k] = free + (win - free) * ce;
-      amp[k] = b.a * Math.pow(1 - c, 1.6);
-      phi[k] = (b.w * t + k * 2.3) % (Math.PI * 2);
-      bend[k] = (b.b * fan * (1 - ce)) / Math.max(W - ox, 1);
+      theta[k] = free + (win - free) * lean;
+      amp[k] = b.a * Math.pow(1 - c, 1.9);
+      phi[k] = (b.w * DRIFT * t + k * 2.3) % (Math.PI * 2);
+      bend[k] = (b.b * fan * (1 - lean)) / Math.max(W - ox, 1);
     }
     return { c, win };
   }
 
   function draw(): void {
     const { c, win } = updateBeams();
-    const L = Math.max(W - ox, 1);
 
     // Minimum fringe spacing between the outermost futures, in CSS pixels.
     const k = (2 * Math.PI) / (4.6 * scale * 2 * fan);
-
-    let detX: number;
-    let detS: number;
-    if (pointerC > autoC && pointerC > 0.01) {
-      detX = pointerX * scale;
-      detS = pointerC * 0.55;
-    } else {
-      detX = ox + L * autoDetX;
-      detS = Math.exp(-flashAge / 0.9) * clamp(autoC * 1.4, 0, 1);
-    }
-    const detY = oy + win * (detX - ox);
 
     gl!.uniform2f(u.res, W, H);
     gl!.uniform1f(u.scale, scale);
@@ -488,10 +456,9 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     gl!.uniform1fv(u.bend, bend);
     gl!.uniform1f(u.fan, fan);
     gl!.uniform1f(u.time, t);
-    gl!.uniform3f(u.win, win, 1.05 * Math.pow(c, 1.4), (1.25 + 3 * (1 - c)) * scale);
+    gl!.uniform3f(u.win, win, 0.88 * Math.pow(c, 1.15), (1.7 + 3 * (1 - c)) * scale);
     gl!.uniform1f(u.collapse, c);
     gl!.uniform3f(u.fade, fadeA, fadeB, fadeX);
-    gl!.uniform3f(u.detect, detX, detY, pin !== null ? 0 : detS);
     gl!.uniform1f(u.intro, introProgress());
     gl!.drawArrays(gl!.TRIANGLES, 0, 3);
   }
@@ -513,16 +480,12 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     if (!running) draw();
   }
 
-  function stepAuto(dt: number): void {
+  function step(dt: number): void {
     phaseT += dt;
-    flashAge += dt;
-    const measuring = pointerOn || performance.now() < tapUntil;
     switch (phase) {
       case "spread":
-        autoC = 0;
-        // A live measurement from the pointer suspends the loop.
-        if (measuring) phaseT = 0;
-        if (phaseT >= spreadFor || triggerHeld) {
+        collapse = 0;
+        if (phaseT >= spreadFor) {
           pickWinner();
           phase = "collapse";
           phaseT = 0;
@@ -530,27 +493,24 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
         }
         break;
       case "collapse":
-        autoC = easeInOut(clamp(phaseT / COLLAPSE, 0, 1));
-        if (phaseT >= COLLAPSE * 0.6 && flashAge > 5) flashAge = 0;
+        collapse = smoother(clamp(phaseT / COLLAPSE, 0, 1));
         if (phaseT >= COLLAPSE) {
           phase = "hold";
           phaseT = 0;
         }
         break;
       case "hold":
-        autoC = 1;
-        if (triggerHeld) phaseT = Math.min(phaseT, HOLD * 0.5);
+        collapse = 1;
         if (phaseT >= HOLD) {
           phase = "release";
           phaseT = 0;
         }
         break;
       case "release":
-        autoC = 1 - easeInOut(clamp(phaseT / RELEASE, 0, 1));
+        collapse = 1 - smoother(clamp(phaseT / RELEASE, 0, 1));
         if (phaseT >= RELEASE) {
           phase = "spread";
           phaseT = 0;
-          flashAge = 99;
         }
         break;
     }
@@ -560,14 +520,7 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     const dt = clamp((now - lastFrame) / 1000, 0, 0.1);
     lastFrame = now;
     t += dt;
-    stepAuto(dt);
-
-    const measuring = pointerOn || now < tapUntil;
-    const target = measuring ? 1 : 0;
-    const tau = target > pointerC ? POINTER_IN : POINTER_OUT;
-    pointerC += (target - pointerC) * (1 - Math.exp(-dt / tau));
-    if (Math.abs(target - pointerC) < 0.0005) pointerC = target;
-
+    step(dt);
     draw();
     rafId = requestAnimationFrame(frame);
   }
@@ -584,58 +537,6 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     if (rafId) cancelAnimationFrame(rafId);
     rafId = 0;
   }
-
-  /** Points the apparatus at a client position, if it lies over the future. */
-  function aim(clientX: number, clientY: number): boolean {
-    const rect = host.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    const dx = x - ox / scale;
-    if (dx < 24) return false;
-    pointerX = x;
-    pointerY = y;
-    const dy = pointerY - oy / scale;
-    pointerTheta = clamp(dy / dx, -1.15 * fan, 1.15 * fan);
-    return true;
-  }
-
-  const onPointerMove = (event: PointerEvent) => {
-    if (event.pointerType === "touch" || reducedMotion.matches) return;
-    pointerOn = aim(event.clientX, event.clientY);
-    start();
-  };
-
-  const onPointerLeave = () => {
-    pointerOn = false;
-  };
-
-  const onPointerDown = (event: PointerEvent) => {
-    if (event.pointerType !== "touch" && !coarse.matches) return;
-    if (reducedMotion.matches) return;
-    if (aim(event.clientX, event.clientY)) tapUntil = performance.now() + TAP_HOLD * 1000;
-  };
-
-  host.addEventListener("pointermove", onPointerMove);
-  host.addEventListener("pointerleave", onPointerLeave);
-  host.addEventListener("pointerdown", onPointerDown);
-
-  // Hovering or focusing the download button holds the field in its measured
-  // state, the way the current hero responds to it.
-  const triggerFor = (target: EventTarget | null) =>
-    target instanceof Element ? target.closest(TRIGGER_SELECTOR) : null;
-  const onTriggerIn = (event: Event) => {
-    if (triggerFor(event.target) && host.contains(event.target as Node)) {
-      triggerHeld = true;
-      pointerOn = false;
-    }
-  };
-  const onTriggerOut = (event: Event) => {
-    if (triggerFor(event.target)) triggerHeld = false;
-  };
-  host.addEventListener("pointerover", onTriggerIn);
-  host.addEventListener("pointerout", onTriggerOut);
-  host.addEventListener("focusin", onTriggerIn);
-  host.addEventListener("focusout", onTriggerOut);
 
   const resizeObserver = new ResizeObserver(() => resize());
   resizeObserver.observe(host);
@@ -657,8 +558,7 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   const onReducedMotionChange = () => {
     if (reducedMotion.matches) {
       stop();
-      autoC = 0;
-      pointerC = 0;
+      collapse = 0;
       draw();
     } else {
       start();
@@ -680,13 +580,6 @@ export function initHeroB(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     resizeObserver.disconnect();
     intersectionObserver.disconnect();
     document.removeEventListener("visibilitychange", onVisibilityChange);
-    host.removeEventListener("pointermove", onPointerMove);
-    host.removeEventListener("pointerleave", onPointerLeave);
-    host.removeEventListener("pointerdown", onPointerDown);
-    host.removeEventListener("pointerover", onTriggerIn);
-    host.removeEventListener("pointerout", onTriggerOut);
-    host.removeEventListener("focusin", onTriggerIn);
-    host.removeEventListener("focusout", onTriggerOut);
     window.removeEventListener("load", onLoad);
     reducedMotion.removeEventListener?.("change", onReducedMotionChange);
     releaseGL();

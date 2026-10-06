@@ -53,8 +53,11 @@ interface Layer {
   name: "far" | "mid" | "near";
   size: number;
   lineHeight: number;
-  /** Fragment budget at desktop, tablet and phone widths. */
-  count: [number, number, number];
+  /**
+   * Fragment budget on the reference card. Smaller and larger cards scale it by
+   * area, so the field reads at one density on a phone and on a wide screen.
+   */
+  count: number;
   fixedAlpha: number;
   ghostAlpha: number;
   sharpAlpha: number;
@@ -64,7 +67,11 @@ interface Layer {
   /** Orbital radius, in multiples of the font size. */
   orbit: number;
   gap: number;
-  /** Hard layers never overlap the headline; soft ones fade near it. */
+  /**
+   * No layer ever overlaps the headline, the mark or the button. Hard layers
+   * also keep their full strength up to the clear zone; soft ones fade as they
+   * approach it.
+   */
   hard: boolean;
   psi: boolean;
 }
@@ -118,7 +125,7 @@ const LAYERS: Layer[] = [
     name: "near",
     size: 15,
     lineHeight: 23,
-    count: [8, 6, 3],
+    count: 8,
     fixedAlpha: 0.26,
     ghostAlpha: 0.62,
     sharpAlpha: 0.9,
@@ -133,7 +140,7 @@ const LAYERS: Layer[] = [
     name: "mid",
     size: 12,
     lineHeight: 18,
-    count: [18, 12, 7],
+    count: 18,
     fixedAlpha: 0.32,
     ghostAlpha: 0.55,
     sharpAlpha: 0.6,
@@ -148,7 +155,7 @@ const LAYERS: Layer[] = [
     name: "far",
     size: 10,
     lineHeight: 15,
-    count: [46, 30, 18],
+    count: 46,
     fixedAlpha: 0.3,
     ghostAlpha: 0.45,
     sharpAlpha: 0.5,
@@ -176,6 +183,18 @@ const INTRO_MS = 1500;
 /** Interference wavelength, CSS pixels, and angular speed, radians per second. */
 const LAMBDA = 110;
 const OMEGA = 0.8;
+
+/**
+ * The card the fragment budgets are set for: a desktop hero. The field keeps
+ * the density it has here at every other size.
+ */
+const REF_AREA = 1328 * 560;
+/** Text scales down on narrow cards, so a long fragment still fits a phone. */
+const MIN_TEXT_SCALE = 0.8;
+const FULL_TEXT_WIDTH = 900;
+
+/** How far an entanglement thread bows from straight, as a share of its length. */
+const THREAD_BOW = 0.14;
 
 const MAX_DPR = 2;
 const LIGHT_DPR = 1.5;
@@ -287,6 +306,29 @@ interface Rect {
 
 const overlaps = (a: Rect, b: Rect) =>
   a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+/**
+ * Whether an entanglement thread between two tokens could pass through any
+ * rect. The thread bows to either side over time, so both extremes are tested.
+ */
+function crosses(a: { cx: number; cy: number }, b: { cx: number; cy: number }, rects: Rect[]) {
+  const mx = (a.cx + b.cx) / 2;
+  const my = (a.cy + b.cy) / 2;
+  const dx = b.cx - a.cx;
+  const dy = b.cy - a.cy;
+  for (const bow of [-THREAD_BOW, 0, THREAD_BOW]) {
+    const qx = mx - dy * bow;
+    const qy = my + dx * bow;
+    for (let i = 1; i < 20; i++) {
+      const u = i / 20;
+      const v = 1 - u;
+      const px = v * v * a.cx + 2 * v * u * qx + u * u * b.cx;
+      const py = v * v * a.cy + 2 * v * u * qy + u * u * b.cy + 10;
+      if (rects.some((r) => px > r.x && px < r.x + r.w && py > r.y && py < r.y + r.h)) return true;
+    }
+  }
+  return false;
+}
 
 function distToRect(px: number, py: number, r: Rect): number {
   const dx = Math.max(r.x - px, 0, px - (r.x + r.w));
@@ -733,14 +775,26 @@ export function initHeroField(host: HTMLElement): () => void {
     const edge = tier === 2 ? 14 : 22;
     fragments = [];
     const nearRects: Rect[] = [];
+    const scale = Math.min(1, Math.max(MIN_TEXT_SCALE, width / FULL_TEXT_WIDTH));
+    // Smaller text packs more fragments into the same area at the same density.
+    const share = (width * height) / REF_AREA / (scale * scale);
 
-    for (const layer of LAYERS) {
+    for (const base of LAYERS) {
+      const layer: Layer = {
+        ...base,
+        size: Math.round(base.size * scale * 2) / 2,
+        lineHeight: Math.round(base.lineHeight * scale),
+        gap: Math.round(base.gap * scale),
+      };
       sharp!.font = `450 ${layer.size}px ${mono}`;
       const cw = sharp!.measureText("0").width || layer.size * 0.6;
       charW.set(layer.size, cw);
 
       const placed: Rect[] = [];
-      const budget = layer.count[tier];
+      const budget = Math.max(
+        2,
+        Math.min(Math.round(layer.count * 1.15), Math.round(layer.count * share)),
+      );
       let attempts = 0;
       while (placed.length < budget && attempts < budget * 40) {
         attempts++;
@@ -758,7 +812,7 @@ export function initHeroField(host: HTMLElement): () => void {
           w: w + layer.gap * 2,
           h: h + layer.gap,
         };
-        if (layer.hard && avoid.some((r) => overlaps(rect, r))) continue;
+        if (avoid.some((r) => overlaps(rect, r))) continue;
         if (placed.some((r) => overlaps(padded, r))) continue;
         if (layer.name !== "near" && nearRects.some((r) => overlaps(padded, r))) continue;
 
@@ -766,8 +820,7 @@ export function initHeroField(host: HTMLElement): () => void {
         frag.y = Math.round(y);
         if (!layer.hard) {
           const d = Math.min(...avoid.map((r) => distToRect(x + w / 2, y + h / 2, r)), 999);
-          const inside = avoid.some((r) => overlaps(rect, r));
-          frag.mask = inside ? 0.15 : 0.3 + 0.7 * smooth(0, 90, d);
+          frag.mask = 0.3 + 0.7 * smooth(0, 90, d);
         }
         placed.push(rect);
         if (layer.name === "near") nearRects.push(padded);
@@ -798,6 +851,8 @@ export function initHeroField(host: HTMLElement): () => void {
         if (b.frag === a.frag || b.state.members.length > 1) continue;
         const d = Math.hypot(a.cx - b.cx, a.cy - b.cy);
         if (d < (tier === 2 ? 120 : 260) || d > (tier === 2 ? 420 : 760)) continue;
+        // A thread never crosses the headline, the mark or the button.
+        if (crosses(a, b, avoid)) continue;
         a.state.members.push(b);
         b.state = a.state;
         made++;
@@ -1056,7 +1111,7 @@ export function initHeroField(host: HTMLElement): () => void {
       const my = (a.cy + c.cy) / 2;
       const dx = c.cx - a.cx;
       const dy = c.cy - a.cy;
-      const bow = 0.14 * Math.sin(time * 0.25 + a.phase[0]!);
+      const bow = THREAD_BOW * Math.sin(time * 0.25 + a.phase[0]!);
       const qx = mx - dy * bow;
       const qy = my + dx * bow;
       const glow = glowOf(s);

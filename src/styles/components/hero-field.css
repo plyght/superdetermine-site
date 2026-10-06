@@ -53,3 +53,23 @@
     opacity: 1;
   }
 }
+
+/* The card fills most of a phone's first screen, so the field has room to run
+   between the headline and the button, and settles at a fixed height once
+   there is width to spare. */
+.hero-a-body {
+  min-height: clamp(500px, calc(100svh - 7rem), 640px);
+}
+
+@media (min-width: 640px) {
+  .hero-a-body {
+    min-height: 560px;
+  }
+}
+
+/* Sized from the card rather than the window, so the longest word always fits
+   the column, from a 320 pixel phone up to the widest card. */
+.hero-a-title {
+  font-size: clamp(28px, 6px + 7.2cqi, 66px);
+  text-wrap: balance;
+}

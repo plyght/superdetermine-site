@@ -9,7 +9,7 @@ import "../styles/components/hero-field.css";
     data-wave-host
     data-keep-dark
     data-hero-a
-    class="hero-a group relative isolate overflow-hidden rounded-card"
+    class="hero-a group relative isolate overflow-hidden rounded-card @container"
   >
     <!-- The superposed field. The light layer is a shader that turns every
          possible value of every token into light, blooms it and colours it
@@ -26,19 +26,20 @@ import "../styles/components/hero-field.css";
     >
     </div>
 
-    <div
-      class="relative z-20 flex min-h-[620px] flex-col justify-between gap-10 p-6 sm:min-h-[560px] sm:p-8"
-    >
+    <div class="hero-a-body relative z-20 flex flex-col justify-between gap-10 p-6 sm:p-8">
       <h1
-        class="max-w-[900px] text-[clamp(36px,6.9vw,66px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_1px_14px_rgba(0,16,8,0.6)]"
+        class="hero-a-title max-w-[900px] font-semibold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_1px_14px_rgba(0,16,8,0.6)]"
         data-hero-headline
       >
         superdetermine is a version control system, keeping code in superposition.
       </h1>
 
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <div class="mb-3 flex flex-col gap-6" data-hero-a-avoid>
-          <Logo class="size-9 text-white drop-shadow-[0_2px_8px_rgba(0,16,8,0.5)]" />
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-6 sm:items-end">
+        <div
+          class="flex items-center gap-3 sm:mb-3 sm:flex-col sm:items-start sm:gap-6"
+          data-hero-a-avoid
+        >
+          <Logo class="size-8 text-white drop-shadow-[0_2px_8px_rgba(0,16,8,0.5)] sm:size-9" />
           <span class="text-[20px] font-semibold tracking-[-0.02em] text-white">superdetermine</span
           >
         </div>

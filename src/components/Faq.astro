@@ -6,47 +6,47 @@ const FAQS = [
   {
     question: "What is a moment, and how is it different from a change?",
     answer:
-      "A moment is a content-addressed state of your working tree, captured on its own with a stable id and a timestamp. It is not a commit and never appears in `sdt log`. A change is the thing you name yourself with `sdt save`.",
+      "A moment is a content-addressed state of your working tree that sdt captures on its own, with a stable id and a timestamp. It is not a commit and never shows up in `sdt log`. A change is something you create and name yourself with `sdt save`.",
   },
   {
-    question: "Does it replace git?",
+    question: "Does sdt replace git?",
     answer:
-      "Yes. sdt is its own version control system, with its own object store, its own history model, and its own commands. The git interop is bidirectional and lossless, so full history, branches, and tags move both ways and `sdt export <dir>` writes a plain git repo whenever you want one. Adoption is reversible because of that interop, not because sdt is git underneath.",
+      "Yes, sdt is its own version control system, with its own object store, history model and commands. Its git interop works in both directions without loss, so full history, branches and tags move either way, and `sdt export <dir>` writes a plain git repo whenever you want one. That interop is what makes switching reversible, rather than sdt being git underneath.",
   },
   {
-    question: "How does capture behave on Linux?",
+    question: "Does automatic capture work on Linux?",
     answer:
-      "Automatic capture is macOS only, started by launchd after a file changes and stopping again when it is done. On Linux you run `sdt watch` in a terminal, which does the same work for as long as it runs.",
+      "Automatic capture is macOS only, where launchd starts it after a file changes and it stops again once it is done. On Linux you run `sdt watch` in a terminal instead, and it does the same work for as long as it keeps running.",
   },
   {
-    question: "What does grading cost me?",
+    question: "Will grading slow down my machine or my terminal?",
     answer:
-      'Nothing until you say what to run with `sdt config checks.full` "<command>". After that each check runs inside a throwaway copy-on-write clone, so your worktree is never touched and your terminal never waits.',
+      'Grading does nothing until you tell it which command to run with `sdt config checks.full "<command>"`. From then on, every check runs inside a throwaway copy-on-write clone, so it never touches your worktree and never makes your terminal wait.',
   },
   {
-    question: "What is a warrant, and why is a green not enough?",
+    question: "Why is a passing check not enough on its own?",
     answer:
-      "An agent can write both the code and the test, in which case a green only proves it agrees with itself. So sdt labels every verdict with a warrant on three axes: independence, relevance, and discrimination. Relevance comes from file access times and is a conservative over-approximation off APFS, and discrimination is measured only when the check itself changed, otherwise reading unknown.",
+      "When an agent writes both the code and the test, a pass only proves that the code agrees with its own test. That is why sdt attaches a warrant to every verdict, which rates it on independence, relevance and discrimination. Relevance comes from file access times and is a conservative over-approximation on file systems other than APFS, while discrimination is only measured when the check itself changed and reads as unknown otherwise.",
   },
   {
     question: "What does sdt record that git does not?",
     answer:
-      "git history is a sequence of commits, and a commit is too coarse a unit to answer which state broke this, which is why bisect has to go searching after a failure. sdt records every captured state with a graded verdict attached, so `sdt green` returns the last one that passed. Two history models, not a faster search.",
+      "git history is a sequence of commits, and a commit is too coarse to tell you which state broke something, which is why bisect has to go searching after a failure. sdt records every captured state with a graded verdict attached, so `sdt green` can return the last one that passed. The difference is in what each system records, rather than in how quickly it can search.",
   },
   {
     question: "Is my code sent anywhere?",
     answer:
-      "No. There is no account, no server, and no telemetry. Sharing is peer to peer, and the optional relay is one you run yourself, which cannot read what passes through it.",
+      "No, because there is no account, no server and no telemetry. Sharing happens peer to peer, and the optional relay is one you run yourself, which cannot read anything that passes through it.",
   },
   {
     question: "What happens to secrets in a captured file?",
     answer:
-      "`sdt seal` encrypts a file in place and records it in `.sdtsealed`, the manifest of what is sealed and who can read it. Only the ciphertext is captured and shared. `sdt unseal` writes the plaintext back out for anyone holding a key.",
+      "`sdt seal` encrypts a file in place and records it in `.sdtsealed`, the manifest of what is sealed and who can read it, so only the ciphertext is ever captured or shared. Anyone holding a key can run `sdt unseal` to write the plaintext back out.",
   },
   {
-    question: "How do I install it, and is it stable?",
+    question: "How do I install sdt, and is it stable?",
     answer:
-      "Take a binary from GitHub Releases, then run `sdt update` to update in place. superdetermine is Apache-2.0 and lives at github.com/plyght/superdetermine. It is early and opinionated, and interfaces may still change.",
+      "Download a binary from GitHub Releases, and run `sdt update` whenever you want to update it in place. superdetermine is licensed under Apache-2.0 and lives at github.com/plyght/superdetermine. It is still early and opinionated, so its interfaces may change.",
   },
 ];
 ---
@@ -60,7 +60,7 @@ const FAQS = [
   <div class="mx-auto w-full max-w-[760px] py-14 sm:py-16">
     <h2 id="faq-title" class="card-h faq-reveal" style="--faq-i: 0">Frequently asked questions</h2>
     <p class="card-lede faq-reveal" style="--faq-i: 1">
-      What to know before you run <code>sdt init</code>.
+      Here is what to know before you run <code>sdt init</code>.
     </p>
 
     <div class="mt-6 flex flex-col gap-4">

@@ -6,15 +6,15 @@ import "../styles/components/capture.css";
 const FACTS = [
   {
     icon: "lucide:activity",
-    text: "Automatic on macOS, <code>sdt watch</code> on Linux",
+    text: "Runs on its own on macOS, and through <code>sdt watch</code> on Linux",
   },
   {
     icon: "lucide:infinity",
-    text: "No staging area, no stash",
+    text: "There is no staging area and no stash to manage",
   },
   {
     icon: "lucide:undo-2",
-    text: "Any operation is reversible with <code>sdt undo</code>",
+    text: "<code>sdt undo</code> reverses any operation you run",
   },
 ];
 
@@ -45,7 +45,7 @@ const READOUT = "-4 min";
     <header class="capture-copy">
       <h2 class="card-h" style="--i: 0">Nothing is ever unsaved</h2>
       <p class="card-lede" style="--i: 1">
-        Capture starts at <code>sdt init</code> and never stops.
+        Capture starts when you run <code>sdt init</code> and keeps going from then on.
       </p>
 
       <ul class="capture-facts" role="list">

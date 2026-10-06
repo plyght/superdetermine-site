@@ -1,0 +1,79 @@
+/* Option F: an orbital of code. The card carries a deep field gradient that
+   the shader repaints as its own base, so a missing WebGL context simply leaves
+   the gradient standing. The shader reads its whole palette from here. */
+.hf-host {
+  --hf-stop-0: #0d4f2e;
+  --hf-stop-1: #06301c;
+  --hf-stop-2: #03160d;
+  --hf-teal: #38ccdb;
+  --hf-mint: #42e08a;
+  --hf-lime: #ccf575;
+  --hf-white: #edfff5;
+  --hf-pass: #3ddc84;
+  /* Where the nucleus sits, as fractions of the card. */
+  --hf-cx: 0.735;
+  --hf-cy: 0.54;
+  /* Radius of the outer orbital, as a fraction of the card height. */
+  --hf-r: 0.6;
+  background: radial-gradient(
+    110% 140% at 73% 54%,
+    var(--hf-stop-0) 0%,
+    var(--hf-stop-1) 44%,
+    var(--hf-stop-2) 100%
+  );
+}
+
+@media (max-width: 639px) {
+  .hf-host {
+    --hf-cx: 0.62;
+    --hf-cy: 0.61;
+    --hf-r: 0.37;
+    background: radial-gradient(
+      140% 120% at 62% 61%,
+      var(--hf-stop-0) 0%,
+      var(--hf-stop-1) 44%,
+      var(--hf-stop-2) 100%
+    );
+  }
+}
+
+.hf-canvas {
+  opacity: 0;
+  animation: hf-canvas-in 700ms var(--ease-reveal) 60ms forwards;
+}
+
+/* The measured state. Its position is set once per layout, never animated;
+   only its focus and opacity follow the measurement. */
+.hf-line {
+  --hf-focus: 0;
+  position: absolute;
+  z-index: 5;
+  left: calc(var(--hf-cx) * 100%);
+  top: calc(var(--hf-cy) * 100%);
+  translate: -50% -50%;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--hf-white);
+  text-shadow:
+    0 0 6px var(--hf-stop-2),
+    0 0 18px var(--hf-stop-1);
+  opacity: calc(var(--hf-focus) * 0.92);
+  filter: blur(calc((1 - var(--hf-focus)) * 6px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hf-canvas {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes hf-canvas-in {
+  to {
+    opacity: 1;
+  }
+}

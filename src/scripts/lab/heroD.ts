@@ -7,21 +7,16 @@
  * both ends (a Brownian bridge), so the bundle is the actual space of
  * histories rather than decoration.
  *
- * Every history carries a phase, its action over hbar. Along each route the
- * phase is drawn as light that rotates in hue and brightness, and the whole
- * bundle is accumulated additively in a float buffer and tone mapped, so it
- * reads as one luminous field. The weight a history keeps is set by how far its
- * action strays from the classical one, measured in units of hbar.
+ * Every history carries a phase, its action over hbar, drawn as a slow carrier
+ * of light along it. The bundle is accumulated additively in a float buffer and
+ * tone mapped, so it reads as one quiet luminous texture low across the card.
+ * The weight a history keeps is set by how far its action strays from the
+ * classical one, measured in units of hbar.
  *
- * The field breathes by turning hbar. Large, and every history is in phase: a
- * wide, faint, rich bundle of all of them. Small, and the phases of the
- * outlying histories spin so fast they cancel, while those near the stationary
- * path line up and reinforce into one soft green beam: the classical path, the
- * state that passed. Beside the detector, the running sum of their phasors
- * draws a Cornu spiral that winds into its eyes as the beam resolves.
- *
- * Code is the material: a few short tokens ride the histories as faint glyphs.
- * The pointer moves the detector, and every history re-routes to follow it.
+ * The field breathes, slowly, by turning hbar. Large, and every history is in
+ * phase: a wide, faint bundle of all of them. Small, and the outlying histories
+ * cancel while those near the stationary path reinforce into one calm green
+ * line: the classical path, the state that passed. It runs on its own.
  */
 
 const MAX_DPR = 2;
@@ -33,53 +28,21 @@ const MODES = 8;
 const SEGMENTS = 96;
 
 /** Largest per-mode deviation, as a fraction of the source to detector span. */
-const SIGMA = 0.5;
+const SIGMA = 0.34;
 
 /** hbar at the two ends of the breath, in units of the span's action scale. */
 const HBAR_WIDE = 0.55;
 const HBAR_SHARP = 0.0022;
 
 /** Seconds per phase of the breath. */
-const OPEN_FIRST = 3.6;
-const OPEN = 5.6;
-const RESOLVE = 3.6;
-const HOLD = 4.6;
-const RELEASE = 3.4;
+const OPEN_FIRST = 4.5;
+const OPEN = 8;
+const RESOLVE = 6;
+const HOLD = 7;
+const RELEASE = 6;
 
 const INTRO_DELAY_MS = 120;
-const INTRO_DURATION_MS = 1400;
-
-/** Detector glide toward the pointer, in seconds. */
-const FOLLOW = 0.55;
-/** Button hover glide, in seconds. */
-const HOVER_GLIDE = 0.5;
-
-const TRIGGER_SELECTOR = "[data-wave-trigger], .buy-btn";
-
-/** The material. Short and plausible, never a listing. */
-const TOKENS = [
-  "sdt green",
-  "check()",
-  "tree",
-  "pass",
-  "x + 1",
-  "head",
-  "ok",
-  "grade()",
-  "fn(x)",
-  "=>",
-  "state",
-  "i <= n",
-  "return",
-  "{ }",
-];
-
-/** The token the classical history carries. */
-const PAYLOAD = "sdt green";
-
-const GLYPH_FONT_PX = 14;
-const GLYPH_ADVANCE = 8.6;
-const ATLAS_SCALE = 3;
+const INTRO_DURATION_MS = 1800;
 
 interface Layout {
   /** Source and detector, as fractions of the card. */
@@ -87,12 +50,12 @@ interface Layout {
   b: [number, number];
   /** Sag of the classical parabola at its midpoint, as a fraction of the span. */
   bulge: number;
-  /** Spiral size, in CSS pixels. */
-  spiral: number;
 }
 
-const WIDE: Layout = { a: [0.07, 0.6], b: [0.87, 0.34], bulge: 0.1, spiral: 150 };
-const TALL: Layout = { a: [0.08, 0.58], b: [0.9, 0.43], bulge: 0.1, spiral: 90 };
+// Low on the card and nearly level, so the bundle lies under the headline as a
+// texture rather than crossing it.
+const WIDE: Layout = { a: [0.05, 0.665], b: [0.95, 0.57], bulge: 0.05 };
+const TALL: Layout = { a: [0.06, 0.6], b: [0.94, 0.52], bulge: 0.06 };
 
 /* ------------------------------------------------------------------ shaders */
 
@@ -202,7 +165,7 @@ void main() {
   vec2 n = vec2(-T.y, T.x);
 
   float glow = step(0.5, uMode);
-  float halfW = mix(0.75 + 0.5 / uScale, 30.0, glow);
+  float halfW = mix(0.5 + 0.5 / uScale, 20.0, glow);
   gl_Position = toClip(P + n * aT.y * halfW);
 
   float L = length(uB - uA);
@@ -259,7 +222,7 @@ void main() {
     float g = exp(-3.2 * vSide * vSide);
     float ends = smoothstep(0.0, 0.08, vS) * smoothstep(1.0, 0.94, vS);
     float pulse = 0.82 + 0.18 * cos(vPhase);
-    outColor = vec4(uPass * g * ends * pulse * uQ * 0.11, 1.0);
+    outColor = vec4(uPass * g * ends * pulse * uQ * 0.035, 1.0);
     return;
   }
 
@@ -274,130 +237,6 @@ void main() {
   float taperCore = mix(taper, 1.0, vCore * uQ * 0.7);
   float I = uGain * vWeight * stripe * cov * mix(taper, taperCore, vCore);
   outColor = vec4(hue * I, 1.0);
-}
-`;
-
-const GLYPH_VS = `#version 300 es
-precision highp float;
-${PATH_GLSL}
-uniform vec2  uCell;
-uniform vec2  uGlyph;
-uniform float uAtlasCols;
-
-layout(location = 0) in vec2 aT;
-layout(location = 1) in vec4 iU0;
-layout(location = 2) in vec4 iU1;
-layout(location = 3) in vec4 iV0;
-layout(location = 4) in vec4 iV1;
-layout(location = 5) in vec4 iP;
-layout(location = 6) in vec4 iG;
-
-out vec2 vUv;
-out float vWeight;
-out float vCore;
-out float vFade;
-
-void main() {
-  vec4 c0;
-  vec4 c1;
-  modes(iU0, iU1, iV0, iV1, iP, c0, c1);
-  float L = length(uB - uA);
-  float s = fract(iG.y + uTime * iG.z + iG.w / L);
-  vec2 P;
-  vec2 T;
-  float d1;
-  pathAt(s, c0, c1, P, T, d1);
-  vec2 n = vec2(-T.y, T.x);
-  vec2 corner = aT - 0.5;
-  // Seated on the route: each glyph rides just above its line, like type on a path.
-  vec2 pos = P + T * corner.x * uGlyph.x + n * (corner.y * uGlyph.y - 11.0);
-  gl_Position = toClip(pos);
-
-  float col = mod(iG.x, uAtlasCols);
-  float row = floor(iG.x / uAtlasCols);
-  vUv = (vec2(col, row) + aT) * uCell;
-
-  float theta = actionTotal(c0, c1) / uHbar;
-  vWeight = exp(-theta / 1.6);
-  vCore = exp(-theta / 0.6);
-  vFade = smoothstep(0.08, 0.22, s) * smoothstep(0.92, 0.78, s);
-}
-`;
-
-const GLYPH_FS = `#version 300 es
-precision highp float;
-uniform sampler2D uAtlas;
-uniform float uQ;
-uniform float uGlyphGain;
-uniform vec3  uMint;
-uniform vec3  uPass;
-
-in vec2 vUv;
-in float vWeight;
-in float vCore;
-in float vFade;
-
-out vec4 outColor;
-
-void main() {
-  float a = texture(uAtlas, vUv).r;
-  vec3 hue = mix(uMint, uPass, clamp(vCore * uQ, 0.0, 1.0));
-  float I = a * vFade * uGlyphGain * mix(vWeight, vCore * 1.5, uQ);
-  outColor = vec4(hue * I, 1.0);
-}
-`;
-
-const SPIRAL_VS = `#version 300 es
-precision highp float;
-uniform vec2  uCenter;
-uniform vec2  uAxis;
-uniform float uSize;
-uniform vec2  uRes;
-uniform float uScale;
-
-layout(location = 0) in vec4 aS;
-layout(location = 1) in float aSide;
-
-out float vU;
-out float vSide;
-
-void main() {
-  float side = sign(aSide);
-  vec2 local = aS.xy * uSize + aS.zw * side * (0.7 + 0.5 / uScale);
-  vec2 axis = uAxis;
-  vec2 perp = vec2(-axis.y, axis.x);
-  vec2 css = uCenter + axis * local.x + perp * local.y;
-  vec2 px = css * uScale;
-  gl_Position = vec4(px.x / uRes.x * 2.0 - 1.0, 1.0 - px.y / uRes.y * 2.0, 0.0, 1.0);
-  vU = abs(aSide) - 1.0;
-  vSide = side;
-}
-`;
-
-const SPIRAL_FS = `#version 300 es
-precision highp float;
-uniform float uReach;
-uniform float uSpiralGain;
-uniform vec3  uTeal;
-uniform vec3  uPass;
-uniform float uQ;
-
-in float vU;
-in float vSide;
-
-out vec4 outColor;
-
-void main() {
-  // For the Cornu spiral the curve parameter is its arc length from the
-  // inflection, so the reach grows the curve evenly into both eyes.
-  float u = vU;
-  float reach = smoothstep(uReach, uReach - 0.9, u);
-  float cov = 1.0 - vSide * vSide;
-  vec3 hue = mix(uTeal, uPass, uQ);
-  // The windings crowd together toward the eyes; thin them there so the eyes
-  // read as a soft glow rather than a stack of rings.
-  float thin = 1.0 / (1.0 + 0.9 * u * u);
-  outColor = vec4(hue * cov * reach * thin * uSpiralGain, 1.0);
 }
 `;
 
@@ -457,10 +296,10 @@ void main() {
   // the classical history arrives.
   vec2 da = css - uA;
   vec2 db = css - uB;
-  light += uWhite * 0.16 * exp(-dot(da, da) / (2.0 * 26.0 * 26.0));
-  light += uWhite * 0.5 * exp(-dot(da, da) / (2.0 * 3.0 * 3.0));
-  light += mix(uWhite * 0.1, uPass * 0.34, uQ) * exp(-dot(db, db) / (2.0 * 34.0 * 34.0));
-  light += uWhite * mix(0.25, 0.7, uQ) * exp(-dot(db, db) / (2.0 * 3.4 * 3.4));
+  light += uWhite * 0.06 * exp(-dot(da, da) / (2.0 * 14.0 * 14.0));
+  light += uWhite * 0.14 * exp(-dot(da, da) / (2.0 * 2.2 * 2.2));
+  light += mix(uWhite * 0.04, uPass * 0.12, uQ) * exp(-dot(db, db) / (2.0 * 18.0 * 18.0));
+  light += uWhite * mix(0.1, 0.24, uQ) * exp(-dot(db, db) / (2.0 * 2.4 * 2.4));
 
   // Clear of the type: dimmed under the headline and the foot.
   float m = 1.0;
@@ -570,85 +409,6 @@ function buildHistories(count: number, random: () => number): Float32Array {
   return data;
 }
 
-/** A Cornu spiral, (C(t), S(t)), as a ribbon. Returns [x, y, nx, ny] per point. */
-function buildSpiral(points: number, reach: number): Float32Array {
-  const xs: number[] = [];
-  const ys: number[] = [];
-  const steps = points * 8;
-  const dt = (2 * reach) / steps;
-  // Integrate outward from the inflection both ways.
-  const half: Array<[number, number, number]> = [];
-  let x = 0;
-  let y = 0;
-  for (let i = 0; i <= steps / 2; i++) {
-    const t = i * dt;
-    if (i % 8 === 0) half.push([t, x, y]);
-    const tm = t + dt / 2;
-    x += Math.cos((Math.PI * tm * tm) / 2) * dt;
-    y += Math.sin((Math.PI * tm * tm) / 2) * dt;
-  }
-  const ts: number[] = [];
-  for (let i = half.length - 1; i > 0; i--) {
-    const [t, hx, hy] = half[i]!;
-    ts.push(-t);
-    xs.push(-hx);
-    ys.push(-hy);
-  }
-  for (const [t, hx, hy] of half) {
-    ts.push(t);
-    xs.push(hx);
-    ys.push(hy);
-  }
-  // Per vertex: position, unit normal, and the curve parameter signed by the
-  // ribbon side and offset by one, so the shader recovers both from it.
-  const out = new Float32Array(ts.length * 2 * 5);
-  for (let i = 0; i < ts.length; i++) {
-    const t = ts[i]!;
-    const nx = -Math.sin((Math.PI * t * t) / 2);
-    const ny = Math.cos((Math.PI * t * t) / 2);
-    for (let side = 0; side < 2; side++) {
-      const sign = side === 0 ? -1 : 1;
-      out.set([xs[i]!, ys[i]!, nx, ny, sign * (Math.abs(t) + 1)], (i * 2 + side) * 5);
-    }
-  }
-  return out;
-}
-
-interface Glyphs {
-  canvas: HTMLCanvasElement;
-  cols: number;
-  rows: number;
-  cellW: number;
-  cellH: number;
-  index: Map<string, number>;
-}
-
-function buildAtlas(): Glyphs {
-  const chars = [...new Set(TOKENS.join("").replace(/\s/g, ""))];
-  const cols = 8;
-  const rows = Math.ceil(chars.length / cols);
-  const cellW = Math.round(GLYPH_ADVANCE * 1.6 * ATLAS_SCALE);
-  const cellH = Math.round(GLYPH_FONT_PX * 1.6 * ATLAS_SCALE);
-  const canvas = document.createElement("canvas");
-  canvas.width = cols * cellW;
-  canvas.height = rows * cellH;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#fff";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = `500 ${GLYPH_FONT_PX * ATLAS_SCALE}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
-  const index = new Map<string, number>();
-  chars.forEach((ch, i) => {
-    index.set(ch, i);
-    const cx = (i % cols) * cellW + cellW / 2;
-    const cy = Math.floor(i / cols) * cellH + cellH / 2;
-    ctx.fillText(ch, cx, cy);
-  });
-  return { canvas, cols, rows, cellW, cellH, index };
-}
-
 /* --------------------------------------------------------------------- init */
 
 export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => void {
@@ -670,7 +430,6 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   const buffers: WebGLBuffer[] = [];
   const vaos: WebGLVertexArrayObject[] = [];
   let lightTex: WebGLTexture | null = null;
-  let atlasTex: WebGLTexture | null = null;
   let fbo: WebGLFramebuffer | null = null;
 
   function releaseGL(): void {
@@ -679,23 +438,18 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     for (const b of buffers) gl.deleteBuffer(b);
     for (const v of vaos) gl.deleteVertexArray(v);
     if (lightTex) gl.deleteTexture(lightTex);
-    if (atlasTex) gl.deleteTexture(atlasTex);
     if (fbo) gl.deleteFramebuffer(fbo);
     programs.length = buffers.length = vaos.length = 0;
-    lightTex = atlasTex = null;
+    lightTex = null;
     fbo = null;
   }
 
   let pathProg: WebGLProgram;
-  let glyphProg: WebGLProgram;
-  let spiralProg: WebGLProgram;
   let compProg: WebGLProgram;
   try {
     pathProg = link(gl, PATH_VS, PATH_FS);
-    glyphProg = link(gl, GLYPH_VS, GLYPH_FS);
-    spiralProg = link(gl, SPIRAL_VS, SPIRAL_FS);
     compProg = link(gl, COMPOSITE_VS, COMPOSITE_FS);
-    programs.push(pathProg, glyphProg, spiralProg, compProg);
+    programs.push(pathProg, compProg);
   } catch (error) {
     console.warn(error);
     releaseGL();
@@ -718,7 +472,7 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   const random = mulberry32(pin !== null ? 7 : seed);
 
   const hostWidth = host.getBoundingClientRect().width || 1200;
-  const count = hostWidth < 640 ? 300 : 560;
+  const count = hostWidth < 640 ? 170 : 320;
   const histories = buildHistories(count, random);
 
   /* ---- the strip every history and the bloom are drawn on */
@@ -756,67 +510,6 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
   bindHistories(histBuf, 20);
 
-  /* ---- glyph trains: each rides a history, its characters spaced along it */
-  const atlas = buildAtlas();
-  const glyphData: number[] = [];
-  const trains = hostWidth < 640 ? 16 : 34;
-  const pushTrain = (pathIndex: number, token: string, base: number, speed: number) => {
-    const o = pathIndex * 20;
-    let j = 0;
-    for (const ch of token) {
-      const cell = atlas.index.get(ch);
-      if (cell !== undefined) {
-        for (let k = 0; k < 20; k++) glyphData.push(histories[o + k]!);
-        glyphData.push(cell, base, speed, j * GLYPH_ADVANCE);
-      }
-      j++;
-    }
-  };
-  pushTrain(0, PAYLOAD, 0.1, 0.045);
-  pushTrain(0, PAYLOAD, 0.6, 0.045);
-  for (let i = 0; i < trains; i++) {
-    const pathIndex = 1 + Math.floor(random() * (count - 1));
-    const token = TOKENS[1 + Math.floor(random() * (TOKENS.length - 1))]!;
-    pushTrain(pathIndex, token, random(), 0.03 + 0.025 * random());
-  }
-  const glyphCount = glyphData.length / 24;
-  const glyphBuf = makeBuffer(new Float32Array(glyphData));
-  const quadBuf = makeBuffer(new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]));
-
-  const glyphVao = gl.createVertexArray()!;
-  vaos.push(glyphVao);
-  gl.bindVertexArray(glyphVao);
-  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
-  gl.enableVertexAttribArray(0);
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-  bindHistories(glyphBuf, 24);
-  gl.enableVertexAttribArray(6);
-  gl.vertexAttribPointer(6, 4, gl.FLOAT, false, 96, 80);
-  gl.vertexAttribDivisor(6, 1);
-
-  atlasTex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, atlasTex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas.canvas);
-  gl.generateMipmap(gl.TEXTURE_2D);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-  /* ---- the Cornu spiral */
-  const SPIRAL_REACH = 4.2;
-  const spiral = buildSpiral(260, SPIRAL_REACH);
-  const spiralVerts = spiral.length / 5;
-  const spiralBuf = makeBuffer(spiral);
-  const spiralVao = gl.createVertexArray()!;
-  vaos.push(spiralVao);
-  gl.bindVertexArray(spiralVao);
-  gl.bindBuffer(gl.ARRAY_BUFFER, spiralBuf);
-  gl.enableVertexAttribArray(0);
-  gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 20, 0);
-  gl.enableVertexAttribArray(1);
-  gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 20, 16);
-
   /* ---- full screen triangle for the composite */
   const triBuf = makeBuffer(new Float32Array([-1, -1, 3, -1, -1, 3]));
   const triVao = gl.createVertexArray()!;
@@ -843,28 +536,6 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     "uMint",
     "uLime",
     "uPass",
-  ]);
-  const gu = uniforms(glyphProg, [
-    ...shared,
-    "uCell",
-    "uGlyph",
-    "uAtlasCols",
-    "uAtlas",
-    "uGlyphGain",
-    "uMint",
-    "uPass",
-  ]);
-  const su = uniforms(spiralProg, [
-    "uCenter",
-    "uAxis",
-    "uSize",
-    "uRes",
-    "uScale",
-    "uReach",
-    "uSpiralGain",
-    "uTeal",
-    "uPass",
-    "uQ",
   ]);
   const cu = uniforms(compProg, [
     "uLight",
@@ -895,18 +566,6 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   gl.uniform3fv(pu.uLime!, lime);
   gl.uniform3fv(pu.uPass!, pass);
 
-  gl.useProgram(glyphProg);
-  gl.uniform3fv(gu.uMint!, mint);
-  gl.uniform3fv(gu.uPass!, pass);
-  gl.uniform1i(gu.uAtlas!, 1);
-  gl.uniform1f(gu.uAtlasCols!, atlas.cols);
-  gl.uniform2f(gu.uCell!, 1 / atlas.cols, 1 / atlas.rows);
-  gl.uniform2f(gu.uGlyph!, atlas.cellW / ATLAS_SCALE, atlas.cellH / ATLAS_SCALE);
-
-  gl.useProgram(spiralProg);
-  gl.uniform3fv(su.uTeal!, teal);
-  gl.uniform3fv(su.uPass!, pass);
-
   gl.useProgram(compProg);
   gl.uniform3fv(cu.uStop0!, readColor(host, "--hd-stop-0", "#0e5132"));
   gl.uniform3fv(cu.uStop1!, readColor(host, "--hd-stop-1", "#06301c"));
@@ -925,17 +584,15 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   const home = { x: 0, y: 0 };
   const src = { x: 0, y: 0 };
   const det = { x: 0, y: 0 };
-  const target = { x: 0, y: 0 };
-  let pointerOn = false;
   const rects = new Float32Array(12);
   const rectDim = new Float32Array(3);
 
   function measureRects(): void {
     const box = host.getBoundingClientRect();
     const els: Array<[HTMLElement | null, number]> = [
-      [headline, 0.72],
-      [avoid[0] ?? null, 0.55],
-      [avoid[1] ?? null, 0.55],
+      [headline, 0.85],
+      [avoid[0] ?? null, 0.6],
+      [avoid[1] ?? null, 0.6],
     ];
     els.forEach(([el, dim], i) => {
       if (!el) {
@@ -974,8 +631,6 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   /* ---- clock */
   let clock = pin !== null ? 40 : reducedMotion.matches ? 40 : 0;
   let cycleT = 0;
-  let hover = 0;
-  let hoverTarget = 0;
   const startedAt = performance.now();
   let lastFrame = startedAt;
   let rafId = 0;
@@ -1008,8 +663,8 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     if (pin !== null) return pin;
     // Reduced motion shows the finished state: the beam resolved, with the
     // histories it came from still faintly around it.
-    if (reducedMotion.matches) return 0.82;
-    return Math.max(cycleQ(), hover);
+    if (reducedMotion.matches) return 0.85;
+    return cycleQ();
   }
 
   function draw(): void {
@@ -1017,12 +672,12 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     // hbar falls geometrically, so the field narrows at an even perceived rate.
     const hbar = Math.exp(Math.log(HBAR_WIDE) + (Math.log(HBAR_SHARP) - Math.log(HBAR_WIDE)) * q);
     const L = Math.hypot(det.x - src.x, det.y - src.y);
-    // Fewer histories survive as the beam resolves, so each one is lifted to
-    // keep the light roughly even.
-    const gain = (0.085 + 0.27 * q * q) * (count > 400 ? 1 : 1.1);
+    // Fewer histories survive as the line resolves, so each one is lifted to
+    // keep the light roughly even across the breath.
+    const gain = (0.058 + 0.17 * q * q) * (count > 200 ? 1 : 1.1);
     // The carrier keeps one wavelength in pixels whatever the span, and it
     // shortens as hbar does, as a de Broglie wavelength would.
-    const stripes = L / (180 - 70 * q);
+    const stripes = L / (220 - 60 * q);
 
     gl!.bindFramebuffer(gl!.FRAMEBUFFER, fbo);
     gl!.viewport(0, 0, W, H);
@@ -1052,35 +707,6 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     // The bloom rides history 0, the classical one.
     gl!.uniform1f(pu.uMode!, 1);
     gl!.drawArraysInstanced(gl!.TRIANGLE_STRIP, 0, (SEGMENTS + 1) * 2, 1);
-
-    gl!.useProgram(glyphProg);
-    setShared(gu);
-    gl!.uniform1f(gu.uGlyphGain!, 0.2);
-    gl!.activeTexture(gl!.TEXTURE1);
-    gl!.bindTexture(gl!.TEXTURE_2D, atlasTex);
-    gl!.bindVertexArray(glyphVao);
-    gl!.drawArraysInstanced(gl!.TRIANGLE_STRIP, 0, 4, glyphCount);
-
-    // The running sum of phasors, centred on the detector and turned so the
-    // beam runs straight on through its inflection.
-    const dx = (det.x - src.x) / (L || 1);
-    const dy = (det.y - src.y) / (L || 1);
-    const tx = dx + 4 * layout.bulge * dy;
-    const ty = dy - 4 * layout.bulge * dx;
-    const tl = Math.hypot(tx, ty) || 1;
-    const axis = [tx / tl, ty / tl] as const;
-    const size = layout.spiral * (cssW < 640 ? 0.8 : 1);
-    gl!.useProgram(spiralProg);
-    gl!.uniform2f(su.uCenter!, det.x, det.y);
-    gl!.uniform2f(su.uAxis!, axis[0], axis[1]);
-    gl!.uniform1f(su.uSize!, size);
-    gl!.uniform2f(su.uRes!, W, H);
-    gl!.uniform1f(su.uScale!, scale);
-    gl!.uniform1f(su.uReach!, 1.2 + (SPIRAL_REACH - 1.2) * q);
-    gl!.uniform1f(su.uSpiralGain!, 0.05 + 0.14 * q);
-    gl!.uniform1f(su.uQ!, q);
-    gl!.bindVertexArray(spiralVao);
-    gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, spiralVerts);
 
     gl!.disable(gl!.BLEND);
     gl!.bindFramebuffer(gl!.FRAMEBUFFER, null);
@@ -1113,14 +739,8 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     src.y = layout.a[1] * cssH;
     home.x = layout.b[0] * cssW;
     home.y = layout.b[1] * cssH;
-    if (!pointerOn) {
-      target.x = home.x;
-      target.y = home.y;
-    }
-    if (det.x === 0 && det.y === 0) {
-      det.x = target.x;
-      det.y = target.y;
-    }
+    det.x = home.x;
+    det.y = home.y;
     measureRects();
     if (nextW !== W || nextH !== H || dpr !== scale || !lightTex) {
       W = nextW;
@@ -1138,13 +758,9 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     lastFrame = now;
     clock += delta;
     cycleT += delta;
-    hover += (hoverTarget - hover) * (1 - Math.exp(-delta / HOVER_GLIDE));
-    const follow = 1 - Math.exp(-delta / FOLLOW);
-    // A slow idle drift, so the detector is never quite pinned.
-    const driftX = pointerOn ? 0 : Math.sin(clock * 0.17) * 10;
-    const driftY = pointerOn ? 0 : Math.sin(clock * 0.23 + 1.3) * 8;
-    det.x += (target.x + driftX - det.x) * follow;
-    det.y += (target.y + driftY - det.y) * follow;
+    // A very slow drift, so the detector is never quite pinned.
+    det.x = home.x + Math.sin(clock * 0.07) * 8;
+    det.y = home.y + Math.sin(clock * 0.09 + 1.3) * 6;
     draw();
     rafId = requestAnimationFrame(frame);
   }
@@ -1179,52 +795,6 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
   const onVisibilityChange = () => (document.hidden ? stop() : start());
   document.addEventListener("visibilitychange", onVisibilityChange);
 
-  const onPointerMove = (event: PointerEvent) => {
-    if (event.pointerType === "touch") return;
-    const box = host.getBoundingClientRect();
-    const x = event.clientX - box.left;
-    const y = event.clientY - box.top;
-    pointerOn = true;
-    // The detector follows, held to the right of the source so every history
-    // still runs forward.
-    target.x = clamp(x, src.x + cssW * 0.35, cssW * 0.95);
-    target.y = clamp(y, cssH * 0.1, cssH * 0.9);
-  };
-  const onPointerLeave = () => {
-    pointerOn = false;
-    target.x = home.x;
-    target.y = home.y;
-  };
-  host.addEventListener("pointermove", onPointerMove);
-  host.addEventListener("pointerleave", onPointerLeave);
-
-  const triggerFor = (target_: EventTarget | null) =>
-    target_ instanceof Element ? target_.closest(TRIGGER_SELECTOR) : null;
-  const onPointerOver = (event: PointerEvent) => {
-    const trigger = triggerFor(event.target);
-    if (!trigger || !host.contains(trigger)) return;
-    const related = event.relatedTarget instanceof Node ? event.relatedTarget : null;
-    if (!trigger.contains(related)) hoverTarget = 1;
-  };
-  const onPointerOut = (event: PointerEvent) => {
-    const trigger = triggerFor(event.target);
-    if (!trigger || !host.contains(trigger)) return;
-    const related = event.relatedTarget instanceof Node ? event.relatedTarget : null;
-    if (!trigger.contains(related)) hoverTarget = 0;
-  };
-  const onFocusIn = (event: FocusEvent) => {
-    const trigger = triggerFor(event.target);
-    if (trigger && host.contains(trigger)) hoverTarget = 1;
-  };
-  const onFocusOut = (event: FocusEvent) => {
-    const trigger = triggerFor(event.target);
-    if (trigger && host.contains(trigger)) hoverTarget = 0;
-  };
-  host.addEventListener("pointerover", onPointerOver);
-  host.addEventListener("pointerout", onPointerOut);
-  host.addEventListener("focusin", onFocusIn);
-  host.addEventListener("focusout", onFocusOut);
-
   const onReducedMotionChange = () => {
     if (reducedMotion.matches) {
       stop();
@@ -1256,12 +826,6 @@ export function initHeroD(canvas: HTMLCanvasElement, host: HTMLElement): () => v
     resizeObserver.disconnect();
     intersectionObserver.disconnect();
     document.removeEventListener("visibilitychange", onVisibilityChange);
-    host.removeEventListener("pointermove", onPointerMove);
-    host.removeEventListener("pointerleave", onPointerLeave);
-    host.removeEventListener("pointerover", onPointerOver);
-    host.removeEventListener("pointerout", onPointerOut);
-    host.removeEventListener("focusin", onFocusIn);
-    host.removeEventListener("focusout", onFocusOut);
     reducedMotion.removeEventListener?.("change", onReducedMotionChange);
     releaseGL();
   };

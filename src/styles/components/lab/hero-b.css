@@ -1,0 +1,32 @@
+/* Option B: the history wavefunction. The card carries a deep field gradient
+   that the shader repaints as its own base, so a missing WebGL context simply
+   leaves the gradient standing. The shader reads the same stops from here. */
+.psi-host {
+  --psi-stop-0: #0d4f2e;
+  --psi-stop-1: #06301c;
+  --psi-stop-2: #03160d;
+  background: radial-gradient(
+    120% 150% at 20% 66%,
+    var(--psi-stop-0) 0%,
+    var(--psi-stop-1) 44%,
+    var(--psi-stop-2) 100%
+  );
+}
+
+.psi-canvas {
+  opacity: 0;
+  animation: psi-canvas-in 700ms var(--ease-reveal) 60ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .psi-canvas {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes psi-canvas-in {
+  to {
+    opacity: 1;
+  }
+}

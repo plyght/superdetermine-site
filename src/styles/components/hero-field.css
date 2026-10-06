@@ -1,0 +1,55 @@
+/* Option A: superposed tokens. The card carries a deep field gradient that the
+   shader repaints as its own base, so a missing WebGL context leaves the
+   gradient standing. The shader reads every colour below from here. */
+.hero-a {
+  --ha-bg-hi: #0d4f2e;
+  --ha-bg-mid: #06301c;
+  --ha-bg-lo: #03160d;
+  --ha-scrim: #03160d99;
+  --ha-ink: #d8f5e6;
+  --ha-teal: #38ccdb;
+  --ha-mint: #42e08a;
+  --ha-lime: #ccf575;
+  --ha-pass: #3ddc84;
+
+  background: radial-gradient(
+    130% 150% at 74% 30%,
+    var(--ha-bg-hi) 0%,
+    var(--ha-bg-mid) 46%,
+    var(--ha-bg-lo) 100%
+  );
+}
+
+.hero-a-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  animation: hero-a-in 1100ms var(--ease-reveal) 80ms forwards;
+}
+
+.hero-a-scrim {
+  background: radial-gradient(ellipse 62% 48% at 26% 24%, var(--ha-scrim) 0%, transparent 100%);
+}
+
+@media (max-width: 639px) {
+  .hero-a-scrim {
+    background: radial-gradient(ellipse 110% 46% at 30% 22%, var(--ha-scrim) 0%, transparent 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-a-canvas {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes hero-a-in {
+  to {
+    opacity: 1;
+  }
+}

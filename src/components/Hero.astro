@@ -1,65 +1,65 @@
 ---
 import BuyButton from "./BuyButton.astro";
 import Logo from "./Logo.astro";
-import "../styles/components/hero-canvas.css";
+import "../styles/components/hero-field.css";
 ---
 
 <div class="mx-auto w-full max-w-[1560px] px-5 sm:px-8 lg:px-14">
   <section
     data-wave-host
     data-keep-dark
-    class="group relative isolate overflow-hidden rounded-card"
-    style="background: radial-gradient(125% 150% at 16% 52%, #14b866 0%, #0a8f4d 46%, #06663a 100%);"
+    data-hero-a
+    class="hero-a group relative isolate overflow-hidden rounded-card"
   >
-    <!-- The history field. It repaints the gradient above as its own base, so
-         the inline style is both the pre-paint look and the fallback when
-         WebGL is unavailable. -->
-    <canvas
-      data-wave
-      class="wave-canvas history-canvas absolute inset-0 h-full w-full"
-      aria-hidden="true"></canvas>
+    <!-- The superposed field. The light layer is a shader that turns every
+         possible value of every token into light, blooms it and colours it
+         by phase; the sharp layer above it holds only what is definite: plain
+         code and the values a measurement resolved. -->
+    <canvas data-hero-a-light class="hero-a-canvas" aria-hidden="true"></canvas>
+    <canvas data-hero-a-sharp class="hero-a-canvas" aria-hidden="true"></canvas>
 
-    <!-- subtle inner border + bottom vignette for text legibility -->
+    <!-- A soft shade behind the headline, so the field can run right up to it. -->
+    <div class="hero-a-scrim pointer-events-none absolute inset-0 z-[5]"></div>
+
     <div
       class="pointer-events-none absolute inset-0 z-10 rounded-card ring-1 ring-inset ring-white/10"
     >
     </div>
 
     <div
-      class="relative z-20 flex min-h-[440px] flex-col justify-between gap-10 p-6 sm:min-h-[500px] sm:p-8"
+      class="relative z-20 flex min-h-[620px] flex-col justify-between gap-10 p-6 sm:min-h-[560px] sm:p-8"
     >
       <h1
-        class="max-w-[900px] text-[clamp(36px,6.9vw,66px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_1px_12px_rgba(0,50,25,0.25)]"
+        class="max-w-[900px] text-[clamp(36px,6.9vw,66px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_1px_14px_rgba(0,16,8,0.6)]"
         data-hero-headline
       >
         superdetermine is a version control system, keeping code in superposition.
       </h1>
 
       <div class="flex flex-wrap items-end justify-between gap-4">
-        <div class="mb-3 flex flex-col gap-6">
-          <Logo class="size-9 text-white drop-shadow-[0_2px_8px_rgba(0,50,25,0.35)]" />
+        <div class="mb-3 flex flex-col gap-6" data-hero-a-avoid>
+          <Logo class="size-9 text-white drop-shadow-[0_2px_8px_rgba(0,16,8,0.5)]" />
           <span class="text-[20px] font-semibold tracking-[-0.02em] text-white">superdetermine</span
           >
         </div>
 
-        <BuyButton variant="hero" />
+        <div data-hero-a-avoid>
+          <BuyButton variant="hero" />
+        </div>
       </div>
     </div>
   </section>
 </div>
 
 <script>
-  import { initWaveCanvas } from "../scripts/waveCanvas";
+  import { initHeroField } from "../scripts/heroField";
   import { initHeroHeadline } from "../scripts/heroHeadline";
 
   const teardowns: Array<() => void> = [];
 
-  document
-    .querySelectorAll<HTMLCanvasElement>("canvas[data-wave].history-canvas")
-    .forEach((canvas) => {
-      const host = canvas.closest<HTMLElement>("[data-wave-host]") ?? canvas.parentElement;
-      if (host) teardowns.push(initWaveCanvas(canvas, host));
-    });
+  document.querySelectorAll<HTMLElement>("[data-hero-a]").forEach((host) => {
+    teardowns.push(initHeroField(host));
+  });
 
   initHeroHeadline();
 

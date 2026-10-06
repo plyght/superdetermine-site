@@ -8,7 +8,7 @@ import react from "@astrojs/react";
 // https://astro.build/config
 export default defineConfig({
   site: "https://superdetermine.com",
-  integrations: [icon(), react(), sitemap()],
+  integrations: [icon(), react(), sitemap({ filter: (page) => !page.includes("/lab/") })],
   vite: {
     plugins: [tailwindcss()],
   },

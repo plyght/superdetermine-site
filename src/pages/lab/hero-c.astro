@@ -1,0 +1,28 @@
+---
+import Base from "../../layouts/Base.astro";
+import HeroC from "../../components/lab/HeroC.astro";
+import FeatureCards from "../../components/FeatureCards.astro";
+import CompanionCard from "../../components/CompanionCard.astro";
+import VsGit from "../../components/VsGit.astro";
+import FeatureGrid from "../../components/FeatureGrid.astro";
+import Faq from "../../components/Faq.astro";
+import BottomCta from "../../components/BottomCta.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<Base
+  title="superdetermine: sdt keeps your code in superposition."
+  description="sdt keeps your code in superposition. sdt captures your worktree continuously and grades each state against your own check, so sdt green returns the last one that passed. Full git interop. No account, no server."
+  intro
+>
+  <main id="main" class="flex flex-col gap-4 pt-2">
+    <HeroC />
+    <FeatureCards />
+    <CompanionCard />
+    <VsGit />
+    <FeatureGrid />
+    <Faq />
+    <BottomCta />
+    <Footer />
+  </main>
+</Base>

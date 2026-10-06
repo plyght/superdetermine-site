@@ -1,0 +1,74 @@
+---
+import BuyButton from "../BuyButton.astro";
+import Logo from "../Logo.astro";
+import "../../styles/components/lab/hero-c.css";
+---
+
+<div class="mx-auto w-full max-w-[1560px] px-5 sm:px-8 lg:px-14">
+  <section
+    data-hc-host
+    data-wave-host
+    data-keep-dark
+    class="hero-c group relative isolate overflow-hidden rounded-card"
+  >
+    <!-- The file in superposition. Every captured state of one file is drawn at
+         once as a silhouette, and a measurement collapses it to the state that
+         passed. The card background is the fallback when canvas is missing. -->
+    <canvas data-hc-canvas class="hc-canvas absolute inset-0 h-full w-full" aria-hidden="true"
+    ></canvas>
+
+    <div
+      class="pointer-events-none absolute inset-0 z-10 rounded-card ring-1 ring-inset ring-white/10"
+    >
+    </div>
+
+    <div
+      class="relative z-20 grid min-h-[620px] grid-rows-[auto_minmax(0,1fr)_auto] gap-6 p-6 sm:p-8 lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-x-12 lg:gap-y-10"
+    >
+      <h1
+        class="max-w-[640px] self-start text-[clamp(36px,5.4vw,64px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white lg:col-start-1 lg:row-start-1"
+        data-hero-headline
+      >
+        superdetermine is a version control system, keeping code in superposition.
+      </h1>
+
+      <!-- Placement only. The canvas reads this box to decide where the file
+           sits, so the layout stays in CSS and the drawing follows it. -->
+      <div
+        data-hc-stage
+        aria-hidden="true"
+        class="min-h-[230px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:min-h-0"
+      >
+      </div>
+
+      <div class="flex flex-wrap items-end justify-between gap-4 lg:col-start-1 lg:row-start-2">
+        <div class="mb-3 flex flex-col gap-6">
+          <Logo class="size-9 text-white" />
+          <span class="text-[20px] font-semibold tracking-[-0.02em] text-white">superdetermine</span
+          >
+        </div>
+
+        <BuyButton variant="hero" />
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  import { initHeroC } from "../../scripts/lab/heroC";
+  import { initHeroHeadline } from "../../scripts/heroHeadline";
+
+  const teardowns: Array<() => void> = [];
+
+  document.querySelectorAll<HTMLElement>("[data-hc-host]").forEach((host) => {
+    const canvas = host.querySelector<HTMLCanvasElement>("canvas[data-hc-canvas]");
+    const stage = host.querySelector<HTMLElement>("[data-hc-stage]");
+    if (canvas && stage) teardowns.push(initHeroC(canvas, host, stage));
+  });
+
+  initHeroHeadline();
+
+  document.addEventListener("astro:before-swap", () => {
+    while (teardowns.length) teardowns.pop()?.();
+  });
+</script>

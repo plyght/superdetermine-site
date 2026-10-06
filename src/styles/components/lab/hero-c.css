@@ -1,0 +1,52 @@
+/* Option C. The card is a deep, nearly black green so the file silhouette and
+   the green of a passing measurement both have somewhere to read against. Every
+   colour is mixed from the global tokens; the canvas resolves the --hc-* values
+   below through a probe, so the drawing follows the theme without its own
+   palette. */
+.hero-c {
+  --hc-void: color-mix(in oklab, var(--color-green-deep) 16%, var(--color-black));
+  --hc-bloom: color-mix(in oklab, var(--color-green-deep) 62%, var(--color-black));
+
+  --hc-ink: var(--color-white);
+  --hc-pass: var(--color-green);
+  --hc-add: var(--color-green);
+  --hc-del: var(--color-red);
+  --hc-str: var(--color-amber);
+
+  background:
+    radial-gradient(70% 90% at 78% 62%, var(--hc-bloom) 0%, transparent 72%),
+    radial-gradient(
+      60% 70% at 8% 0%,
+      color-mix(in oklab, var(--hc-bloom) 45%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--hc-void);
+}
+
+/* The light theme darkens the accent tokens for a light page, but this card
+   stays dark, so the accents are lifted back toward white for it. */
+html[data-theme="light"] .hero-c {
+  --hc-pass: color-mix(in oklab, var(--color-green) 72%, var(--color-white));
+  --hc-add: color-mix(in oklab, var(--color-green) 72%, var(--color-white));
+  --hc-del: color-mix(in oklab, var(--color-red) 80%, var(--color-white));
+  --hc-str: color-mix(in oklab, var(--color-amber) 70%, var(--color-white));
+}
+
+.hc-canvas {
+  display: block;
+  opacity: 0;
+  animation: hc-canvas-in 800ms var(--ease-reveal) 80ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-canvas {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@keyframes hc-canvas-in {
+  to {
+    opacity: 1;
+  }
+}

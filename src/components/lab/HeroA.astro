@@ -11,11 +11,15 @@ import "../../styles/components/lab/hero-a.css";
     data-hero-a
     class="hero-a group relative isolate overflow-hidden rounded-card"
   >
-    <!-- The superposed field. Two layers: every alternative a token could be
-         lives on the soft layer, and whatever a measurement resolves is drawn
-         on the sharp one, so collapsing reads as a change of focus. -->
-    <canvas data-hero-a-ghost class="hero-a-canvas hero-a-ghost" aria-hidden="true"></canvas>
-    <canvas data-hero-a-sharp class="hero-a-canvas hero-a-sharp" aria-hidden="true"></canvas>
+    <!-- The superposed field. The light layer is a shader that turns every
+         possible value of every token into light, interferes it and bends it
+         through the measurement front; the sharp layer above it holds only
+         what is definite: plain code and the values a measurement resolved. -->
+    <canvas data-hero-a-light class="hero-a-canvas" aria-hidden="true"></canvas>
+    <canvas data-hero-a-sharp class="hero-a-canvas" aria-hidden="true"></canvas>
+
+    <!-- A soft shade behind the headline, so the field can run right up to it. -->
+    <div class="hero-a-scrim pointer-events-none absolute inset-0 z-[5]"></div>
 
     <div
       class="pointer-events-none absolute inset-0 z-10 rounded-card ring-1 ring-inset ring-white/10"
@@ -23,10 +27,10 @@ import "../../styles/components/lab/hero-a.css";
     </div>
 
     <div
-      class="relative z-20 flex min-h-[600px] flex-col justify-between gap-10 p-6 sm:min-h-[520px] sm:p-8"
+      class="relative z-20 flex min-h-[620px] flex-col justify-between gap-10 p-6 sm:min-h-[560px] sm:p-8"
     >
       <h1
-        class="max-w-[900px] text-[clamp(36px,6.9vw,66px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_1px_12px_rgba(0,20,10,0.45)]"
+        class="max-w-[900px] text-[clamp(36px,6.9vw,66px)] font-semibold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_1px_14px_rgba(0,16,8,0.6)]"
         data-hero-headline
       >
         superdetermine is a version control system, keeping code in superposition.
@@ -34,7 +38,7 @@ import "../../styles/components/lab/hero-a.css";
 
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div class="mb-3 flex flex-col gap-6" data-hero-a-avoid>
-          <Logo class="size-9 text-white drop-shadow-[0_2px_8px_rgba(0,20,10,0.45)]" />
+          <Logo class="size-9 text-white drop-shadow-[0_2px_8px_rgba(0,16,8,0.5)]" />
           <span class="text-[20px] font-semibold tracking-[-0.02em] text-white">superdetermine</span
           >
         </div>

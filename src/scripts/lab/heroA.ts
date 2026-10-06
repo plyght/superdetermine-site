@@ -1,31 +1,46 @@
 /**
  * Hero option A: superposed tokens.
  *
- * A sparse field of tiny code fragments. Most of each fragment is definite,
- * but a few tokens hold several values at once (`<` and `<=`, `+ 1` and `- 1`),
- * drawn over one another as soft ghosts whose weights drift like probability
- * amplitudes. A measurement travels across the card as a wave and collapses
- * every superposed token onto the value that passes, which flashes green and
- * settles, then the field decoheres back into superposition.
+ * A deep field of code fragments on three depth planes. Most of each fragment
+ * is definite, but some tokens hold several values at once (`<` and `<=`,
+ * `+ 1` and `- 1`). Each value is a slow orbital smear of copies weighted by
+ * its amplitude, and the whole possibility field is rendered as light: a
+ * shader blooms it, runs it through a two source interference pattern so its
+ * hue follows the phase, and screens it onto the card. Near tokens carry their
+ * wavefunction under them, and some tokens in different fragments are
+ * entangled, joined by a thread of light.
  *
- * Measurements happen on a slow cycle, and also wherever the pointer enters the
- * card, held for as long as it stays.
+ * A measurement is a soft wavefront that refracts the field as it passes.
+ * Every token it crosses settles onto the value that passes, entangled partners
+ * settle at the same instant wherever they are, the pass blooms green, and the
+ * field then decoheres back into superposition. It runs on its own; the
+ * pointer only bends the light a little where it rests, like a faint lens.
  */
 
-interface Superposed {
-  /** Every value the token could take. Index 0 is the one that passes. */
+type RGB = [number, number, number];
+
+interface QState {
+  /** 0 superposed, 1 resolved. Integrated per frame toward the target. */
+  m: number;
+  arriveAt: number;
+  releaseAt: number;
+  glowAt: number;
+  members: Token[];
+}
+
+interface Token {
   alts: string[];
-  /** Resting probability of each value. */
   base: number[];
   freq: number[];
   phase: number[];
-  /** Column the token starts at, within its line. */
   col: number;
   line: number;
-  /** Width of the slot in columns: the longest alternative. */
   cols: number;
-  collapseAt: number;
-  releaseAt: number;
+  state: QState;
+  frag: Fragment;
+  /** Centre in CSS pixels, set at layout. */
+  cx: number;
+  cy: number;
 }
 
 interface Fixed {
@@ -34,22 +49,48 @@ interface Fixed {
   line: number;
 }
 
+interface Layer {
+  name: "far" | "mid" | "near";
+  size: number;
+  lineHeight: number;
+  /** Fragment budget at desktop, tablet and phone widths. */
+  count: [number, number, number];
+  fixedAlpha: number;
+  ghostAlpha: number;
+  sharpAlpha: number;
+  glowAlpha: number;
+  /** Copies per value: the orbital each value smears into. */
+  copies: number;
+  /** Orbital radius, in multiples of the font size. */
+  orbit: number;
+  gap: number;
+  /** Hard layers never overlap the headline; soft ones fade near it. */
+  hard: boolean;
+  psi: boolean;
+}
+
 interface Fragment {
+  layer: Layer;
   fixed: Fixed[];
-  tokens: Superposed[];
+  tokens: Token[];
   cols: number;
   lines: number;
-  /** Placement in CSS pixels, top left, once laid out. */
   x: number;
   y: number;
-  placed: boolean;
-  /** Per fragment breathing, so no two fragments pulse together. */
+  /** Fade from the headline clear zone, 0 to 1. */
+  mask: number;
   breath: number;
+}
+
+interface Wave {
+  x: number;
+  y: number;
+  t0: number;
 }
 
 /**
  * The source. A token written `{a|b|c}` is superposed, and its first value is
- * the one that passes. Short and plausible, never a listing.
+ * the one that passes.
  */
 const SOURCE: string[][] = [
   ["if (i {<=|<} len) {", "  return {a|b};", "}"],
@@ -60,36 +101,96 @@ const SOURCE: string[][] = [
   ["for (let i = {0|1}; i < n; i++)"],
   ["state.{pass|fail|skip}()"],
   ["if (!{ready|done}) {retry|throw}"],
+  ["{const|let|var} seen = new Set();"],
+  ["x {&&|&|??} y"],
+  ["n {>=|>} 0"],
+  ["fn grade(s) {", "  s.run({check|test|lint})", "}"],
+  ["head = {prev|next}"],
+  ["{await|yield} save(tree)"],
+  ["i{++|--}"],
+  ["assert({a === b|a == b})"],
+  ["match {ok|err} {"],
+  ["k = {k + 1|k << 1|k}"],
+  ["{Some(v)|None}"],
+  ["sum {+=|-=} w[i];"],
+  ["if (len {>|>=} cap) grow()"],
+  ["return {lo|hi|mid};"],
+  ["defer {close()|flush()}"],
+  ["{true|false}"],
 ];
 
-const FONT_SIZE = 14;
-const LINE_HEIGHT = 22;
+const LAYERS: Layer[] = [
+  {
+    name: "near",
+    size: 15,
+    lineHeight: 23,
+    count: [8, 6, 3],
+    fixedAlpha: 0.26,
+    ghostAlpha: 0.62,
+    sharpAlpha: 0.9,
+    glowAlpha: 1,
+    copies: 6,
+    orbit: 0.08,
+    gap: 36,
+    hard: true,
+    psi: true,
+  },
+  {
+    name: "mid",
+    size: 12,
+    lineHeight: 18,
+    count: [18, 12, 7],
+    fixedAlpha: 0.32,
+    ghostAlpha: 0.55,
+    sharpAlpha: 0.6,
+    glowAlpha: 0.75,
+    copies: 4,
+    orbit: 0.1,
+    gap: 22,
+    hard: true,
+    psi: false,
+  },
+  {
+    name: "far",
+    size: 10,
+    lineHeight: 15,
+    count: [46, 30, 18],
+    fixedAlpha: 0.3,
+    ghostAlpha: 0.45,
+    sharpAlpha: 0.5,
+    glowAlpha: 0.45,
+    copies: 2,
+    orbit: 0.1,
+    gap: 10,
+    hard: false,
+    psi: false,
+  },
+];
 
-/** Low ceilings: the field is texture behind a headline, never content. */
-const FIXED_ALPHA = 0.2;
-const FIXED_RESOLVED_ALPHA = 0.34;
-const GHOST_ALPHA = 0.8;
-const SHARP_ALPHA = 0.78;
-const RESIDUAL_GREEN = 0.18;
-
-const COLLAPSE_MS = 420;
-const RELEASE_MS = 1500;
-const GLOW_DECAY_MS = 900;
-/** Speed of the measurement front, in CSS pixels per millisecond. */
-const WAVE_SPEED = 1.35;
-const HOLD_MS = 2600;
-const FIRST_MEASURE_MS = 3600;
-const CYCLE_MS = 8400;
-const INTRO_DELAY_MS = 200;
-const INTRO_MS = 1300;
+/** Measurement front speed, CSS pixels per millisecond. */
+const WAVE_SPEED = 0.7;
+const HOLD_MS = 2400;
+const FIRST_WAVE_MS = 3000;
+const CYCLE_MS = 8200;
+/** Collapse settles quickly but never snaps; decoherence is a slow spread. */
+const TAU_UP = 150;
+const TAU_DOWN = 900;
+const GLOW_MS = 1300;
+const INTRO_DELAY_MS = 150;
+const INTRO_MS = 1500;
+const LENS_RADIUS = 160;
+/** Interference wavelength, CSS pixels, and angular speed, radians per second. */
+const LAMBDA = 110;
+const OMEGA = 0.8;
 
 const MAX_DPR = 2;
+const LIGHT_DPR = 1.5;
 
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-const invEaseOut = (m: number) => 1 - Math.cbrt(1 - m);
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
-
-type RGB = [number, number, number];
+const smooth = (a: number, b: number, v: number) => {
+  const t = clamp01((v - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
 
 function parseColor(value: string, fallback: RGB): RGB {
   const hex = value.trim().replace("#", "");
@@ -98,13 +199,16 @@ function parseColor(value: string, fallback: RGB): RGB {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-const rgba = (c: RGB, a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`;
+const css = (c: RGB, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`;
 
 const mix = (a: RGB, b: RGB, t: number): RGB => [
   Math.round(a[0] + (b[0] - a[0]) * t),
   Math.round(a[1] + (b[1] - a[1]) * t),
   Math.round(a[2] + (b[2] - a[2]) * t),
 ];
+
+const glsl = (c: RGB) =>
+  `vec3(${(c[0] / 255).toFixed(4)}, ${(c[1] / 255).toFixed(4)}, ${(c[2] / 255).toFixed(4)})`;
 
 /** Small seeded generator, so a resize lays the field out the same way again. */
 function rng(seed: number): () => number {
@@ -118,53 +222,66 @@ function rng(seed: number): () => number {
   };
 }
 
-function parseFragment(lines: string[]): Fragment {
-  const fixed: Fixed[] = [];
-  const tokens: Superposed[] = [];
-  let cols = 0;
+function newState(): QState {
+  return {
+    m: 0,
+    arriveAt: Infinity,
+    releaseAt: -Infinity,
+    glowAt: -Infinity,
+    members: [],
+  };
+}
+
+function parseFragment(lines: string[], layer: Layer, random: () => number): Fragment {
+  const frag: Fragment = {
+    layer,
+    fixed: [],
+    tokens: [],
+    cols: 0,
+    lines: lines.length,
+    x: 0,
+    y: 0,
+    mask: 1,
+    breath: random() * Math.PI * 2,
+  };
 
   lines.forEach((source, line) => {
     let col = 0;
-    const re = /\{([^}]*)\}/g;
     let last = 0;
+    const re = /\{([^}]*)\}/g;
     let match: RegExpExecArray | null;
     const pushFixed = (text: string) => {
-      if (text) fixed.push({ text, col, line });
+      if (text.trim()) frag.fixed.push({ text, col, line });
       col += text.length;
     };
     while ((match = re.exec(source))) {
       pushFixed(source.slice(last, match.index));
       const alts = match[1]!.split("|");
       const width = Math.max(...alts.map((a) => a.length));
-      const base = alts.map((_, i) => (i === 0 ? 0.9 : 0.7 + Math.random() * 0.4));
-      tokens.push({
+      const state = newState();
+      const token: Token = {
         alts,
-        base,
-        freq: alts.map(() => 0.00035 + Math.random() * 0.0005),
-        phase: alts.map(() => Math.random() * Math.PI * 2),
+        base: alts.map((_, i) => (i === 0 ? 0.85 : 0.6 + random() * 0.5)),
+        freq: alts.map(() => 0.00035 + random() * 0.0005),
+        phase: alts.map(() => random() * Math.PI * 2),
         col,
         line,
         cols: width,
-        collapseAt: Infinity,
-        releaseAt: Infinity,
-      });
+        state,
+        frag,
+        cx: 0,
+        cy: 0,
+      };
+      state.members.push(token);
+      frag.tokens.push(token);
       col += width;
       last = match.index + match[0].length;
     }
     pushFixed(source.slice(last));
-    cols = Math.max(cols, col);
+    frag.cols = Math.max(frag.cols, col);
   });
 
-  return {
-    fixed,
-    tokens,
-    cols,
-    lines: lines.length,
-    x: 0,
-    y: 0,
-    placed: false,
-    breath: Math.random() * Math.PI * 2,
-  };
+  return frag;
 }
 
 interface Rect {
@@ -177,48 +294,460 @@ interface Rect {
 const overlaps = (a: Rect, b: Rect) =>
   a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
+function distToRect(px: number, py: number, r: Rect): number {
+  const dx = Math.max(r.x - px, 0, px - (r.x + r.w));
+  const dy = Math.max(r.y - py, 0, py - (r.y + r.h));
+  return Math.hypot(dx, dy);
+}
+
+/* ------------------------------------------------------------------------ */
+/* The light layer.                                                           */
+/*                                                                            */
+/* The possibility field is drawn on an offscreen canvas, one channel per     */
+/* kind of light: red for the far plane, green for the near and mid planes,   */
+/* blue for the green of a pass. The shader blooms each channel at its own    */
+/* radius, so depth reads as focus, and turns the result into light.          */
+/* ------------------------------------------------------------------------ */
+
+const VERTEX_SHADER = `
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+`;
+
+interface Palette {
+  bg: [RGB, RGB, RGB];
+  teal: RGB;
+  mint: RGB;
+  lime: RGB;
+  pass: RGB;
+  ink: RGB;
+}
+
+function fragmentShader(c: Palette): string {
+  return `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+
+uniform vec2 uRes;
+uniform float uScale;
+uniform vec2 uSize;
+uniform sampler2D uField;
+uniform sampler2D uMed;
+uniform sampler2D uBig;
+uniform vec2 uMedPx;
+uniform vec2 uBigPx;
+uniform float uTime;
+uniform float uIntro;
+uniform vec4 uSrc;
+uniform vec4 uWave0;
+uniform vec4 uWave1;
+uniform vec4 uDet;
+uniform vec4 uClear;
+
+const vec3 STOP0 = ${glsl(c.bg[0])};
+const vec3 STOP1 = ${glsl(c.bg[1])};
+const vec3 STOP2 = ${glsl(c.bg[2])};
+const vec2 ORIGIN = vec2(0.74, 0.30);
+const vec2 SPAN = vec2(1.30, 1.50);
+const float MID_STOP = 0.46;
+
+const vec3 TEAL = ${glsl(c.teal)};
+const vec3 MINT = ${glsl(c.mint)};
+const vec3 LIME = ${glsl(c.lime)};
+const vec3 PASS = ${glsl(c.pass)};
+const vec3 WHITE = ${glsl(c.ink)};
+
+const float K = ${((2 * Math.PI) / LAMBDA).toFixed(5)};
+const float OMEGA = ${OMEGA.toFixed(5)};
+const float EXPO = 2.1;
+const float GRAIN = 0.012;
+
+float hash21(vec2 p_) {
+  p_ = fract(p_ * vec2(127.1, 311.7));
+  p_ += dot(p_, p_ + 34.56);
+  return fract(p_.x * p_.y);
+}
+
+vec3 ring(vec2 uv, float r) {
+  vec2 t = r / uSize;
+  vec2 d = t * 0.7071;
+  vec3 s = texture2D(uField, uv + vec2(t.x, 0.0)).rgb;
+  s += texture2D(uField, uv - vec2(t.x, 0.0)).rgb;
+  s += texture2D(uField, uv + vec2(0.0, t.y)).rgb;
+  s += texture2D(uField, uv - vec2(0.0, t.y)).rgb;
+  s += texture2D(uField, uv + d).rgb;
+  s += texture2D(uField, uv - d).rgb;
+  s += texture2D(uField, uv + vec2(d.x, -d.y)).rgb;
+  s += texture2D(uField, uv + vec2(-d.x, d.y)).rgb;
+  return s * 0.125;
+}
+
+// A small tent over a downsampled copy of the field: the bloom is built by
+// shrinking the field on the 2D side, so here it only needs smoothing.
+vec3 soft(sampler2D t, vec2 uv, vec2 px) {
+  vec2 o = 1.0 / px;
+  vec3 s = texture2D(t, uv).rgb * 0.4;
+  s += texture2D(t, uv + vec2(o.x, 0.0)).rgb * 0.15;
+  s += texture2D(t, uv - vec2(o.x, 0.0)).rgb * 0.15;
+  s += texture2D(t, uv + vec2(0.0, o.y)).rgb * 0.15;
+  s += texture2D(t, uv - vec2(0.0, o.y)).rgb * 0.15;
+  return s;
+}
+
+float boxDist(vec2 p, vec4 r) {
+  vec2 d = max(max(r.xy - p, p - r.zw), 0.0);
+  return length(d);
+}
+
+vec3 screenBlend(vec3 a, vec3 b) {
+  return 1.0 - (1.0 - a) * (1.0 - b);
+}
+
+// A measurement front: a soft lens travelling outward. It pushes the field
+// aside as it passes, shifts the interference phase, and leaves the green of
+// everything that just passed behind it.
+void front(vec2 p, vec4 w, inout vec2 bend, inout float shift, inout vec3 light, inout float bloom) {
+  if (w.w <= 0.0) return;
+  vec2 dv = p - w.xy;
+  float d = max(length(dv), 1.0);
+  float e = (d - w.z) / 30.0;
+  float lens = e * exp(-e * e);
+  bend += (dv / d) * lens * 9.0 * w.w;
+  shift += exp(-e * e) * 22.0 * w.w;
+  float band = exp(-e * e);
+  light += mix(TEAL, LIME, smoothstep(-1.2, 1.2, e)) * band * 0.06 * w.w;
+  bloom += exp(min(d - w.z, 0.0) / 240.0) * (1.0 - smoothstep(-1.5, 0.5, e)) * 0.05 * w.w;
+}
+
+void main() {
+  vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uScale;
+  vec2 q = p / uSize;
+
+  float g = length((q - ORIGIN) / SPAN);
+  vec3 base = mix(STOP0, STOP1, clamp(g / MID_STOP, 0.0, 1.0));
+  base = mix(base, STOP2, clamp((g - MID_STOP) / (1.0 - MID_STOP), 0.0, 1.0));
+
+  vec2 bend = vec2(0.0);
+  float shift = 0.0;
+  vec3 frontLight = vec3(0.0);
+  float trail = 0.0;
+  front(p, uWave0, bend, shift, frontLight, trail);
+  front(p, uWave1, bend, shift, frontLight, trail);
+
+  // The pointer: a faint lens that bends the field where it rests. It never
+  // measures anything.
+  vec2 dd = p - uDet.xy;
+  float dr = length(dd);
+  float inLens = 1.0 - smoothstep(0.0, uDet.z, dr);
+  bend -= dd * 0.035 * inLens * inLens * uDet.w;
+
+  vec2 uv = (p - bend) / uSize;
+  vec3 c0 = texture2D(uField, uv).rgb;
+  vec3 r1 = ring(uv, 1.6);
+  vec3 med = soft(uMed, uv, uMedPx);
+  vec3 big = soft(uBig, uv, uBigPx);
+
+  float far = 0.2 * r1.r + 0.8 * med.r;
+  float near = 0.5 * c0.g + 0.5 * r1.g;
+  float halo = 0.9 * med.g + 1.6 * big.g;
+  float passLight = 0.2 * c0.b + 0.6 * med.b + 1.8 * big.b;
+
+  // Two coherent sources off the card. Their amplitudes add, so the field is
+  // banded by |psi|^2 and its hue follows arg(psi).
+  float d1 = length(p - uSrc.xy);
+  float d2 = length(p - uSrc.zw);
+  float a1 = d1 * K - uTime * OMEGA;
+  float a2 = (d2 + shift) * K - uTime * OMEGA * 1.07;
+  vec2 psi = vec2(cos(a1) + cos(a2), sin(a1) + sin(a2));
+  float I = dot(psi, psi) * 0.25;
+  float arg = atan(psi.y, psi.x);
+
+  float clear = smoothstep(0.0, 110.0, boxDist(p, uClear));
+  float field = 0.3 + 0.7 * clear;
+
+  float L = (near * 1.0 + halo * 0.5 + far * 0.6) * (0.5 + 0.9 * I) + I * 0.006 * field;
+  float a = 1.0 - exp(-pow(max(L, 0.0) * EXPO, 0.85));
+
+  vec3 hue = mix(TEAL, MINT, 0.5 + 0.5 * cos(arg));
+  hue = mix(hue, LIME, 0.3 * smoothstep(0.2, 1.0, sin(arg)));
+  hue = mix(hue, WHITE, 0.35 * smoothstep(0.45, 1.0, a));
+
+  vec3 col = screenBlend(base, hue * a * field * uIntro);
+
+  float pa = 1.0 - exp(-(passLight * 2.4 + trail));
+  col = screenBlend(col, mix(PASS, WHITE, 0.25 * pa) * pa * uIntro);
+  col = screenBlend(col, frontLight * uIntro);
+
+  col = screenBlend(col, TEAL * inLens * inLens * 0.018 * uDet.w * uIntro);
+
+  col += (hash21(gl_FragCoord.xy) - 0.5) * GRAIN;
+  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}
+`;
+}
+
+interface LightFrame {
+  time: number;
+  intro: number;
+  src: [number, number, number, number];
+  waves: Array<[number, number, number, number]>;
+  det: [number, number, number, number];
+  clear: [number, number, number, number];
+}
+
+interface Light {
+  draw(layers: HTMLCanvasElement[], f: LightFrame): void;
+  resize(w: number, h: number, scale: number): void;
+  destroy(): void;
+}
+
+function createLight(canvas: HTMLCanvasElement, palette: Palette): Light | null {
+  const gl = canvas.getContext("webgl", {
+    antialias: false,
+    alpha: false,
+    depth: false,
+    stencil: false,
+    premultipliedAlpha: false,
+    // The reduced-motion path paints one frame and stops.
+    preserveDrawingBuffer: true,
+    powerPreference: "low-power",
+  });
+  if (!gl) return null;
+
+  const shaders: WebGLShader[] = [];
+  const compile = (type: number, source: string) => {
+    const shader = gl.createShader(type)!;
+    shaders.push(shader);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw new Error("Hero A shader: " + gl.getShaderInfoLog(shader));
+    }
+    return shader;
+  };
+
+  const program = gl.createProgram()!;
+  try {
+    gl.attachShader(program, compile(gl.VERTEX_SHADER, VERTEX_SHADER));
+    gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentShader(palette)));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error("Hero A link failed");
+  } catch (error) {
+    console.warn(error);
+    gl.deleteProgram(program);
+    for (const s of shaders) gl.deleteShader(s);
+    return null;
+  }
+
+  gl.useProgram(program);
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(program, "aPos");
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const textures = [0, 1, 2].map((unit) => {
+    const texture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return texture;
+  });
+  // The field is drawn additively, so premultiplied colour is its intensity.
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+
+  const u = (name: string) => gl.getUniformLocation(program, name);
+  const uRes = u("uRes");
+  const uScale = u("uScale");
+  const uSize = u("uSize");
+  const uField = u("uField");
+  const uTime = u("uTime");
+  const uIntro = u("uIntro");
+  const uSrc = u("uSrc");
+  const uWave0 = u("uWave0");
+  const uWave1 = u("uWave1");
+  const uDet = u("uDet");
+  const uClear = u("uClear");
+  gl.uniform1i(uField, 0);
+  gl.uniform1i(u("uMed"), 1);
+  gl.uniform1i(u("uBig"), 2);
+  const uMedPx = u("uMedPx");
+  const uBigPx = u("uBigPx");
+
+  let scale = 1;
+  let wCss = 1;
+  let hCss = 1;
+  let wPx = 1;
+  let hPx = 1;
+
+  return {
+    resize(w, h, s) {
+      scale = s;
+      wCss = w;
+      hCss = h;
+      wPx = Math.max(1, Math.round(w * s));
+      hPx = Math.max(1, Math.round(h * s));
+      canvas.width = wPx;
+      canvas.height = hPx;
+      gl.viewport(0, 0, wPx, hPx);
+    },
+    draw(layers, f) {
+      layers.forEach((layer, unit) => {
+        gl.activeTexture(gl.TEXTURE0 + unit);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, layer);
+      });
+      gl.uniform2f(uMedPx, layers[1]!.width, layers[1]!.height);
+      gl.uniform2f(uBigPx, layers[2]!.width, layers[2]!.height);
+      gl.uniform2f(uRes, wPx, hPx);
+      gl.uniform1f(uScale, wPx / wCss);
+      gl.uniform2f(uSize, wCss, hCss);
+      gl.uniform1f(uTime, f.time);
+      gl.uniform1f(uIntro, f.intro);
+      gl.uniform4f(uSrc, ...f.src);
+      gl.uniform4f(uWave0, ...(f.waves[0] ?? [0, 0, 0, 0]));
+      gl.uniform4f(uWave1, ...(f.waves[1] ?? [0, 0, 0, 0]));
+      gl.uniform4f(uDet, ...f.det);
+      gl.uniform4f(uClear, ...f.clear);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      void scale;
+    },
+    destroy() {
+      for (const t of textures) gl.deleteTexture(t);
+      gl.deleteBuffer(buffer);
+      gl.deleteProgram(program);
+      for (const s of shaders) gl.deleteShader(s);
+    },
+  };
+}
+
+/* ------------------------------------------------------------------------ */
+
+type Hue = "r" | "g" | "b" | "ink" | "settled" | "pass";
+
 export function initHeroA(host: HTMLElement): () => void {
-  const ghostCanvas = host.querySelector<HTMLCanvasElement>("[data-hero-a-ghost]");
+  const lightCanvas = host.querySelector<HTMLCanvasElement>("[data-hero-a-light]");
   const sharpCanvas = host.querySelector<HTMLCanvasElement>("[data-hero-a-sharp]");
-  if (!ghostCanvas || !sharpCanvas) return () => {};
-  const ghost = ghostCanvas.getContext("2d");
+  if (!lightCanvas || !sharpCanvas) return () => {};
   const sharp = sharpCanvas.getContext("2d");
-  // No context leaves the card as its CSS gradient, which is a finished look.
-  if (!ghost || !sharp) return () => {};
+  const fieldCanvas = document.createElement("canvas");
+  const fieldCtx = fieldCanvas.getContext("2d");
+  // The bloom: the field shrunk twice. Downsampling is the blur.
+  const medCanvas = document.createElement("canvas");
+  const bigCanvas = document.createElement("canvas");
+  const medCtx = medCanvas.getContext("2d");
+  const bigCtx = bigCanvas.getContext("2d");
+  // No 2D context leaves the card as its CSS gradient, which is a finished look.
+  if (!sharp || !fieldCtx) return () => {};
 
   const style = getComputedStyle(host);
-  const ink = parseColor(style.getPropertyValue("--ha-ink"), [216, 245, 230]);
-  const fringeA = parseColor(style.getPropertyValue("--ha-fringe-a"), [143, 227, 255]);
-  const fringeB = parseColor(style.getPropertyValue("--ha-fringe-b"), [201, 255, 179]);
-  const pass = parseColor(style.getPropertyValue("--ha-pass"), [61, 220, 132]);
-  const settled = mix(ink, pass, RESIDUAL_GREEN);
+  const read = (name: string, fallback: RGB) => parseColor(style.getPropertyValue(name), fallback);
+  const ink = read("--ha-ink", [216, 245, 230]);
+  const pass = read("--ha-pass", [61, 220, 132]);
+  const palette: Palette = {
+    bg: [
+      read("--ha-bg-hi", [13, 79, 46]),
+      read("--ha-bg-mid", [6, 48, 28]),
+      read("--ha-bg-lo", [3, 22, 13]),
+    ],
+    teal: read("--ha-teal", [56, 204, 219]),
+    mint: read("--ha-mint", [66, 224, 138]),
+    lime: read("--ha-lime", [204, 245, 117]),
+    pass,
+    ink,
+  };
+  const hues: Record<Hue, RGB> = {
+    r: [255, 0, 0],
+    g: [0, 255, 0],
+    b: [0, 0, 255],
+    ink,
+    settled: mix(ink, pass, 0.22),
+    pass,
+  };
   const mono =
     style.getPropertyValue("--font-mono").trim() ||
     "ui-monospace, SFMono-Regular, Menlo, monospace";
-  const font = `450 ${FONT_SIZE}px ${mono}`;
 
-  const fragments = SOURCE.map(parseFragment);
+  let light = createLight(lightCanvas, palette);
+  // Without WebGL the possibility field is drawn plainly onto the sharp layer.
+  const field = light ? fieldCtx : sharp;
+
   const seed = Math.floor(Math.random() * 1e9);
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  // Lab only: `?slow=0.2` runs the field at a fifth of its speed, so slow
+  // screenshot tooling can catch a moment mid-measurement.
+  const params = new URLSearchParams(location.search);
+  const timeScale = Math.min(Math.max(Number(params.get("slow")) || 1, 0.01), 1);
+  const realStart = performance.now();
+  const clock = () => realStart + (performance.now() - realStart) * timeScale;
+  const startedAt = clock();
 
   let width = 1;
   let height = 1;
-  let charW = FONT_SIZE * 0.6;
+  let dpr = 1;
+  let fieldScale = 1;
+  let fragments: Fragment[] = [];
+  let tokens: Token[] = [];
+  let states: QState[] = [];
+  let clearBox: [number, number, number, number] = [0, 0, 0, 0];
+  const charW = new Map<number, number>();
 
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const startedAt = performance.now();
+  /* -- Sprites: every string is rasterised once per size, hue and scale. -- */
+  const sprites = new Map<string, HTMLCanvasElement>();
+  function sprite(text: string, size: number, hue: Hue, scale: number): HTMLCanvasElement {
+    const key = `${scale}|${size}|${hue}|${text}`;
+    let c = sprites.get(key);
+    if (c) return c;
+    c = document.createElement("canvas");
+    const font = `450 ${size * scale}px ${mono}`;
+    const g = c.getContext("2d")!;
+    g.font = font;
+    const pad = Math.ceil(2 * scale);
+    c.width = Math.ceil(g.measureText(text).width) + pad * 2;
+    c.height = Math.ceil(size * 1.7 * scale);
+    g.font = font;
+    g.textBaseline = "middle";
+    g.fillStyle = css(hues[hue]);
+    g.fillText(text, pad, c.height / 2);
+    sprites.set(key, c);
+    return c;
+  }
 
-  let rafId = 0;
-  let running = false;
-  let visible = true;
-  let hovering = false;
-  let nextAutoAt = startedAt + FIRST_MEASURE_MS;
-  let pendingReleaseAt = Infinity;
+  function stamp(
+    target: CanvasRenderingContext2D,
+    text: string,
+    size: number,
+    hue: Hue,
+    x: number,
+    y: number,
+    alpha: number,
+  ): void {
+    if (alpha < 0.003) return;
+    let h = hue;
+    let a = alpha;
+    if (!light && target === sharp && (hue === "r" || hue === "g" || hue === "b")) {
+      h = hue === "b" ? "pass" : "ink";
+      a *= hue === "g" ? 0.35 : 0.2;
+    }
+    const scale = target === sharp ? dpr : fieldScale;
+    const s = sprite(text, size, h, scale);
+    target.globalAlpha = a > 1 ? 1 : a;
+    const pad = Math.ceil(2 * scale) / scale;
+    target.drawImage(s, x - pad, y - s.height / scale / 2, s.width / scale, s.height / scale);
+  }
 
-  /** Everything the headline and the bottom row cover, padded, relative to the card. */
+  /* -- Layout -- */
+
   function exclusions(): Rect[] {
     const box = host.getBoundingClientRect();
     const out: Rect[] = [];
-    const pad = width < 640 ? 14 : 22;
+    const pad = width < 640 ? 12 : 20;
     const add = (r: DOMRect) => {
       if (r.width < 1 || r.height < 1) return;
       out.push({
@@ -229,231 +758,438 @@ export function initHeroA(host: HTMLElement): () => void {
       });
     };
     const headline = host.querySelector("[data-hero-headline]");
+    let hx0 = Infinity;
+    let hy0 = Infinity;
+    let hx1 = -Infinity;
+    let hy1 = -Infinity;
     if (headline) {
       // Line boxes rather than the block, so a short last line leaves its
-      // right side free for the field.
+      // right side open to the field.
       const range = document.createRange();
       range.selectNodeContents(headline);
-      for (const r of range.getClientRects()) add(r);
+      for (const r of range.getClientRects()) {
+        add(r);
+        hx0 = Math.min(hx0, r.left - box.left);
+        hy0 = Math.min(hy0, r.top - box.top);
+        hx1 = Math.max(hx1, r.right - box.left);
+        hy1 = Math.max(hy1, r.bottom - box.top);
+      }
       range.detach();
     }
+    clearBox = Number.isFinite(hx0) ? [hx0, hy0, hx1, hy1] : [0, 0, 0, 0];
     host.querySelectorAll("[data-hero-a-avoid]").forEach((el) => add(el.getBoundingClientRect()));
     return out;
   }
 
   function layout(): void {
-    sharp!.font = font;
-    charW = sharp!.measureText("0").width || FONT_SIZE * 0.6;
-    const avoid = exclusions();
     const random = rng(seed);
-    const edge = width < 640 ? 22 : 34;
-    const gap = width < 640 ? 18 : 40;
-    const placed: Rect[] = [];
-    const budget = width < 640 ? 4 : width < 1024 ? 5 : 7;
+    const avoid = exclusions();
+    const tier = width >= 1024 ? 0 : width >= 640 ? 1 : 2;
+    const edge = tier === 2 ? 14 : 22;
+    fragments = [];
+    const nearRects: Rect[] = [];
 
-    // Same shuffle every layout for this page load.
-    const order = fragments.map((_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      [order[i], order[j]] = [order[j]!, order[i]!];
-    }
+    for (const layer of LAYERS) {
+      sharp!.font = `450 ${layer.size}px ${mono}`;
+      const cw = sharp!.measureText("0").width || layer.size * 0.6;
+      charW.set(layer.size, cw);
 
-    for (const f of fragments) f.placed = false;
-
-    for (const index of order) {
-      if (placed.length >= budget) break;
-      const f = fragments[index]!;
-      const w = f.cols * charW;
-      const h = f.lines * LINE_HEIGHT;
-      if (w > width - edge * 2) continue;
-      for (let attempt = 0; attempt < 140; attempt++) {
+      const placed: Rect[] = [];
+      const budget = layer.count[tier];
+      let attempts = 0;
+      while (placed.length < budget && attempts < budget * 40) {
+        attempts++;
+        const lines = SOURCE[Math.floor(random() * SOURCE.length)]!;
+        const frag = parseFragment(lines, layer, random);
+        const w = frag.cols * cw;
+        const h = frag.lines * layer.lineHeight;
+        if (w > width - edge * 2) continue;
         const x = edge + random() * (width - edge * 2 - w);
         const y = edge + random() * (height - edge * 2 - h);
         const rect = { x, y, w, h };
-        const padded = { x: x - gap, y: y - gap * 0.6, w: w + gap * 2, h: h + gap * 1.2 };
-        if (avoid.some((r) => overlaps(rect, r))) continue;
+        const padded = {
+          x: x - layer.gap,
+          y: y - layer.gap * 0.5,
+          w: w + layer.gap * 2,
+          h: h + layer.gap,
+        };
+        if (layer.hard && avoid.some((r) => overlaps(rect, r))) continue;
         if (placed.some((r) => overlaps(padded, r))) continue;
-        // Snap to the pixel grid so resolved glyphs land crisp.
-        f.x = Math.round(x);
-        f.y = Math.round(y);
-        f.placed = true;
+        if (layer.name !== "near" && nearRects.some((r) => overlaps(padded, r))) continue;
+
+        frag.x = Math.round(x);
+        frag.y = Math.round(y);
+        if (!layer.hard) {
+          const d = Math.min(...avoid.map((r) => distToRect(x + w / 2, y + h / 2, r)), 999);
+          const inside = avoid.some((r) => overlaps(rect, r));
+          frag.mask = inside ? 0.15 : 0.3 + 0.7 * smooth(0, 90, d);
+        }
         placed.push(rect);
+        if (layer.name === "near") nearRects.push(padded);
+        fragments.push(frag);
+      }
+    }
+
+    tokens = [];
+    for (const f of fragments) {
+      const cw = charW.get(f.layer.size)!;
+      for (const t of f.tokens) {
+        t.cx = f.x + (t.col + t.cols / 2) * cw;
+        t.cy = f.y + (t.line + 0.5) * f.layer.lineHeight;
+        tokens.push(t);
+      }
+    }
+
+    // Entanglement: pairs of near or mid tokens in different fragments share
+    // one state, so they resolve at the same instant wherever they are.
+    const candidates = tokens.filter((t) => t.frag.layer.name !== "far");
+    const pairs = tier === 2 ? 2 : tier === 1 ? 4 : 5;
+    let made = 0;
+    for (let i = 0; i < candidates.length && made < pairs; i++) {
+      const a = candidates[i]!;
+      if (a.state.members.length > 1) continue;
+      for (let j = i + 1; j < candidates.length; j++) {
+        const b = candidates[j]!;
+        if (b.frag === a.frag || b.state.members.length > 1) continue;
+        const d = Math.hypot(a.cx - b.cx, a.cy - b.cy);
+        if (d < (tier === 2 ? 120 : 260) || d > (tier === 2 ? 420 : 760)) continue;
+        a.state.members.push(b);
+        b.state = a.state;
+        made++;
         break;
       }
     }
+    states = [...new Set(tokens.map((t) => t.state))];
   }
 
   function resize(): void {
     const rect = host.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+    const nextDpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+    if (nextDpr !== dpr) sprites.clear();
+    dpr = nextDpr;
     width = Math.max(1, rect.width);
     height = Math.max(1, rect.height);
-    for (const [canvas, ctx] of [
-      [ghostCanvas!, ghost!],
-      [sharpCanvas!, sharp!],
-    ] as const) {
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+    sharpCanvas!.width = Math.round(width * dpr);
+    sharpCanvas!.height = Math.round(height * dpr);
+    sharp!.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // The field is bloomed in the shader, so it never needs full resolution.
+    fieldScale = Math.min(dpr, 1.25);
+    fieldCanvas.width = Math.round(width * fieldScale);
+    fieldCanvas.height = Math.round(height * fieldScale);
+    fieldCtx!.setTransform(fieldScale, 0, 0, fieldScale, 0, 0);
+    medCanvas.width = Math.max(1, Math.round(width / 3));
+    medCanvas.height = Math.max(1, Math.round(height / 3));
+    bigCanvas.width = Math.max(1, Math.round(width / 9));
+    bigCanvas.height = Math.max(1, Math.round(height / 9));
+    light?.resize(width, height, Math.min(dpr, LIGHT_DPR));
     layout();
-    if (!running) draw(performance.now());
+    if (!running) render(clock());
   }
 
-  /** How far a token has resolved, 0 superposed to 1 definite. */
-  function resolved(t: Superposed, now: number): number {
-    const up = (at: number) => easeOut(clamp01((at - t.collapseAt) / COLLAPSE_MS));
-    if (now < t.releaseAt) return up(now);
-    return up(t.releaseAt) * (1 - easeOut(clamp01((now - t.releaseAt) / RELEASE_MS)));
-  }
+  /* -- Measurement -- */
 
-  /** The brief green of a state that just passed. */
-  function glow(t: Superposed, now: number): number {
-    const lit = t.collapseAt + COLLAPSE_MS * 0.45;
-    if (now < lit) return 0;
-    return Math.exp(-(Math.min(now, t.releaseAt) - lit) / GLOW_DECAY_MS);
-  }
+  let waves: Wave[] = [];
+  // Lab only: `?auto=0` stops the timed measurements, for screenshots.
+  const auto = params.get("auto") !== "0";
+  let nextAutoAt = auto ? startedAt + FIRST_WAVE_MS : Infinity;
+  const lens = { x: 0, y: 0, active: false, strength: 0 };
 
-  function tokenCentre(f: Fragment, t: Superposed): [number, number] {
-    return [f.x + (t.col + t.cols / 2) * charW, f.y + (t.line + 0.5) * LINE_HEIGHT];
-  }
+  const isOn = (s: QState, now: number) => now >= s.arriveAt && now < s.releaseAt;
 
-  /** Collapse everything, as a front spreading out from one point. */
-  function measure(ox: number, oy: number, now: number): void {
-    for (const f of fragments) {
-      if (!f.placed) continue;
-      for (const t of f.tokens) {
-        const m = resolved(t, now);
-        if (now < t.releaseAt && t.collapseAt <= now && m > 0.98) continue;
-        if (m > 0.02) {
-          // Already partly resolved: pick up from where it is, no jump.
-          t.collapseAt = now - invEaseOut(m) * COLLAPSE_MS;
-        } else {
-          const [cx, cy] = tokenCentre(f, t);
-          const d = Math.hypot(cx - ox, cy - oy);
-          t.collapseAt = now + d / WAVE_SPEED + Math.random() * 70;
-        }
-        t.releaseAt = Infinity;
+  function fireWave(x: number, y: number, now: number): void {
+    waves.push({ x, y, t0: now });
+    if (waves.length > 2) waves.shift();
+    for (const s of states) {
+      // The front reaches an entangled state when it reaches the nearer of its
+      // members; the other answers at the same instant, wherever it is.
+      let arrive = Infinity;
+      for (const t of s.members) {
+        arrive = Math.min(arrive, now + Math.hypot(t.cx - x, t.cy - y) / WAVE_SPEED);
+      }
+      const hold = arrive + HOLD_MS + Math.random() * 1200;
+      if (isOn(s, now)) {
+        s.releaseAt = Math.max(s.releaseAt, hold);
+      } else {
+        s.arriveAt = arrive;
+        s.releaseAt = hold;
       }
     }
   }
 
-  /** Let the field decohere back into superposition, a little out of step. */
-  function release(now: number): void {
-    for (const f of fragments) {
-      for (const t of f.tokens) {
-        const at = Math.max(now, t.collapseAt + COLLAPSE_MS) + Math.random() * 600;
-        t.releaseAt = at;
-      }
-    }
+  /* -- Drawing -- */
+
+  function sources(time: number): [number, number, number, number] {
+    return [
+      width * (0.58 + 0.1 * Math.sin(time * 0.05)),
+      -height * 0.4,
+      width * (1.1 + 0.05 * Math.cos(time * 0.04)),
+      height * (0.9 + 0.15 * Math.sin(time * 0.045)),
+    ];
   }
 
-  function draw(now: number): void {
-    const time = reducedMotion.matches ? 41000 : now;
-    const intro = reducedMotion.matches
-      ? 1
-      : easeOut(clamp01((now - startedAt - INTRO_DELAY_MS) / INTRO_MS));
+  let lastFrame = startedAt;
 
-    ghost!.clearRect(0, 0, width, height);
-    sharp!.clearRect(0, 0, width, height);
-    ghost!.font = font;
-    sharp!.font = font;
-    ghost!.textBaseline = "middle";
-    sharp!.textBaseline = "middle";
-    ghost!.globalCompositeOperation = "lighter";
+  function render(now: number): void {
+    const still = reducedMotion.matches;
+    const time = still ? 47 : now / 1000;
+    const tms = time * 1000;
+    const intro = still ? 1 : smooth(0, 1, (now - startedAt - INTRO_DELAY_MS) / INTRO_MS);
+    const dt = Math.min(Math.max(now - lastFrame, 0), 100);
+    lastFrame = now;
+
+    if (!still) {
+      for (const s of states) {
+        const target = isOn(s, now) ? 1 : 0;
+        const before = s.m;
+        const tau = target > s.m ? TAU_UP : TAU_DOWN;
+        s.m += (target - s.m) * (1 - Math.exp(-dt / tau));
+        if (Math.abs(target - s.m) < 0.001) s.m = target;
+        if (before < 0.4 && s.m >= 0.4) s.glowAt = now;
+      }
+    }
+
+    for (const g of light ? [sharp!, fieldCtx!] : [sharp!]) {
+      g.globalAlpha = 1;
+      g.globalCompositeOperation = "source-over";
+      g.clearRect(0, 0, width, height);
+      g.globalCompositeOperation = "lighter";
+    }
+    if (!light) sharp!.globalCompositeOperation = "source-over";
+
+    const glowOf = (s: QState) => (s.m > 0.05 ? Math.exp(-(now - s.glowAt) / GLOW_MS) : 0);
 
     for (const f of fragments) {
-      if (!f.placed) continue;
+      const L = f.layer;
+      const cw = charW.get(L.size)!;
+      const channel: Hue = L.name === "far" ? "r" : "g";
+      const fade = f.mask * (light ? 1 : intro);
 
-      let fragResolved = 0;
-      let fragGlow = 0;
+      let resolved = 0;
+      let glow = 0;
       for (const t of f.tokens) {
-        fragResolved += resolved(t, now);
-        fragGlow = Math.max(fragGlow, glow(t, now));
+        resolved += t.state.m;
+        glow = Math.max(glow, glowOf(t.state));
       }
-      fragResolved /= Math.max(1, f.tokens.length);
+      resolved /= Math.max(1, f.tokens.length);
 
-      const breath = 0.88 + 0.12 * Math.sin(time * 0.00042 + f.breath);
-      const fixedAlpha =
-        (FIXED_ALPHA + (FIXED_RESOLVED_ALPHA - FIXED_ALPHA) * fragResolved) * breath * intro;
-      sharp!.fillStyle = rgba(mix(ink, pass, fragGlow * 0.35), fixedAlpha);
+      const breath = 0.85 + 0.15 * Math.sin(time * 0.35 + f.breath);
+      const fixedA = L.fixedAlpha * (1 + 0.6 * resolved) * breath * fade;
       for (const s of f.fixed) {
-        sharp!.fillText(s.text, f.x + s.col * charW, f.y + (s.line + 0.5) * LINE_HEIGHT);
+        const x = f.x + s.col * cw;
+        const y = f.y + (s.line + 0.5) * L.lineHeight;
+        if (L.name === "near") {
+          stamp(sharp!, s.text, L.size, "ink", x, y, fixedA * intro);
+          if (glow > 0.02)
+            stamp(sharp!, s.text, L.size, "pass", x, y, fixedA * glow * 0.45 * intro);
+        } else {
+          stamp(field, s.text, L.size, channel, x, y, fixedA);
+        }
+        if (glow > 0.02) stamp(field, s.text, L.size, "b", x, y, fixedA * glow * 0.35);
       }
 
       for (const t of f.tokens) {
-        const m = resolved(t, now);
-        const g = glow(t, now);
-        const x = f.x + t.col * charW;
-        const y = f.y + (t.line + 0.5) * LINE_HEIGHT;
-
-        // Amplitudes drift, so which value dominates keeps changing.
-        let total = 0;
-        const p = t.alts.map((_, i) => {
-          const v = t.base[i]! * (1 + 0.55 * Math.sin(time * t.freq[i]! + t.phase[i]!));
-          total += v;
-          return v;
-        });
-
-        // A slow interference pattern crossing the field.
-        const shimmer =
-          0.78 +
-          0.22 * Math.cos(x * 0.011 - time * 0.0011 + 0.9 * Math.sin(y * 0.013 + time * 0.0004));
-
+        const s = t.state;
+        const m = s.m;
+        const g = glowOf(s);
+        const x = f.x + t.col * cw;
+        const y = f.y + (t.line + 0.5) * L.lineHeight;
         const unresolved = 1 - m;
-        if (unresolved > 0.002) {
-          t.alts.forEach((alt, i) => {
-            const prob = p[i]! / total;
-            const a = GHOST_ALPHA * Math.pow(prob, 0.7) * shimmer * unresolved * intro;
-            if (a < 0.004) return;
-            // Each value sits a hair off the line, by its own phase, and gathers
-            // onto it as the token resolves.
-            const dy =
-              ((i - (t.alts.length - 1) / 2) * 3.4 +
-                Math.sin(time * 0.0009 + t.phase[i]! * 3) * 1.6) *
-              unresolved;
-            const split = (0.6 + 0.6 * Math.sin(time * 0.0013 + t.phase[i]!)) * unresolved;
-            ghost!.fillStyle = rgba(fringeA, a * 0.55);
-            ghost!.fillText(alt, x - split, y + dy);
-            ghost!.fillStyle = rgba(fringeB, a * 0.55);
-            ghost!.fillText(alt, x + split, y + dy);
+
+        if (unresolved > 0.003) {
+          let total = 0;
+          const p = t.alts.map((_, i) => {
+            const v = t.base[i]! * (1 + 0.55 * Math.sin(tms * t.freq[i]! + t.phase[i]!));
+            total += v;
+            return v;
           });
+          const n = t.alts.length;
+          const orbit = L.size * L.orbit;
+          for (let i = 0; i < n; i++) {
+            const prob = p[i]! / total;
+            const a = (L.ghostAlpha * Math.pow(prob, 0.7) * unresolved * fade * 1.6) / L.copies;
+            if (a < 0.002) continue;
+            // Each value is an orbital: copies spread round an ellipse, wider
+            // for the less likely values, the values stacked a little apart.
+            const stack = (i - (n - 1) / 2) * L.size * 0.48 * unresolved;
+            const spread = orbit * (1 + 1.4 * (1 - prob)) * unresolved;
+            for (let k = 0; k < L.copies; k++) {
+              const th = time * (0.3 + 0.1 * i) + (k / L.copies) * Math.PI * 2 + t.phase[i]!;
+              const ox = Math.cos(th) * spread * 1.1;
+              const oy = Math.sin(th) * spread * 0.6 + stack;
+              stamp(field, t.alts[i]!, L.size, channel, x + ox, y + oy, a);
+            }
+          }
         }
 
-        if (m > 0.002) {
-          const colour = mix(settled, pass, g);
-          if (g > 0.04) {
-            sharp!.shadowColor = rgba(pass, 0.7 * g);
-            sharp!.shadowBlur = 14 * g;
+        if (m > 0.003) {
+          const a = L.sharpAlpha * m * fade;
+          if (L.name === "far") {
+            stamp(field, t.alts[0]!, L.size, "r", x, y, a);
+          } else {
+            stamp(sharp!, t.alts[0]!, L.size, "settled", x, y, a * intro);
+            if (g > 0.01) stamp(sharp!, t.alts[0]!, L.size, "pass", x, y, a * g * intro);
           }
-          sharp!.fillStyle = rgba(colour, SHARP_ALPHA * m * intro);
-          sharp!.fillText(t.alts[0]!, x, y);
-          sharp!.shadowBlur = 0;
-          sharp!.shadowColor = "transparent";
+          if (g > 0.01) stamp(field, t.alts[0]!, L.size, "b", x, y, L.glowAlpha * g * m * fade);
         }
+
+        if (L.psi) drawPsi(t, x, y + L.size * 1.05, cw, m, g, time, fade);
+      }
+    }
+
+    drawThreads(time, glowOf);
+
+    sharp!.globalAlpha = 1;
+    sharp!.globalCompositeOperation = "source-over";
+    fieldCtx!.globalAlpha = 1;
+    fieldCtx!.globalCompositeOperation = "source-over";
+
+    if (light) {
+      const diag = Math.hypot(width, height);
+      const lit = waves
+        .map((w) => {
+          const r = (now - w.t0) * WAVE_SPEED;
+          const reach = Math.max(
+            Math.hypot(w.x, w.y),
+            Math.hypot(width - w.x, w.y),
+            Math.hypot(w.x, height - w.y),
+            Math.hypot(width - w.x, height - w.y),
+          );
+          const str = smooth(0, 80, r) * (1 - smooth(reach * 0.75, reach + 60, r));
+          return [w.x, w.y, r, still ? 0 : str] as [number, number, number, number];
+        })
+        .filter((w) => w[3] > 0.001);
+      waves = waves.filter((w) => (now - w.t0) * WAVE_SPEED < diag * 1.6);
+      // The lens eases in and out slowly, so the pointer is felt, not seen.
+      const target = lens.active ? 1 : 0;
+      lens.strength += (target - lens.strength) * (1 - Math.exp(-dt / 600));
+      for (const [g, c, from] of [
+        [medCtx, medCanvas, fieldCanvas],
+        [bigCtx, bigCanvas, medCanvas],
+      ] as const) {
+        if (!g) continue;
+        g.globalCompositeOperation = "copy";
+        g.imageSmoothingEnabled = true;
+        g.imageSmoothingQuality = "high";
+        g.drawImage(from, 0, 0, c.width, c.height);
+      }
+      light.draw([fieldCanvas, medCanvas, bigCanvas], {
+        time,
+        intro,
+        src: sources(time),
+        waves: lit.slice(-2),
+        det: [lens.x, lens.y, LENS_RADIUS * (width < 640 ? 0.7 : 1), lens.strength],
+        clear: clearBox,
+      });
+    }
+  }
+
+  /** The wavefunction under a near token: spread while superposed, one peak once measured. */
+  function drawPsi(
+    t: Token,
+    x: number,
+    y: number,
+    cw: number,
+    m: number,
+    g: number,
+    time: number,
+    fade: number,
+  ): void {
+    const w = t.cols * cw + 16;
+    const x0 = x - 8;
+    const steps = 32;
+    const k = (Math.PI * 2 * (2 + t.alts.length)) / w;
+    field.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const u = i / steps;
+      const env = Math.exp(-Math.pow((u - 0.5) / 0.28, 2));
+      const wave = Math.cos(u * w * k - time * 1.1 + t.phase[0]!) * env * 2.6 * (1 - m);
+      const peak = Math.exp(-Math.pow((u - 0.5) / 0.08, 2)) * 5 * m;
+      const px = x0 + u * w;
+      const py = y - wave - peak;
+      if (i === 0) field.moveTo(px, py);
+      else field.lineTo(px, py);
+    }
+    field.lineWidth = 1;
+    field.strokeStyle = css(light ? hues.g : ink);
+    field.globalAlpha = Math.min(1, (light ? 0.5 : 0.15) * (0.6 + 0.4 * (1 - m)) * fade);
+    field.stroke();
+    if (g > 0.02 || m > 0.02) {
+      field.strokeStyle = css(light ? hues.b : pass);
+      field.globalAlpha = Math.min(1, (0.25 * m + 0.6 * g) * fade);
+      field.stroke();
+    }
+  }
+
+  /** Entanglement threads: a faint dotted line of light, lit green as the pair resolves. */
+  function drawThreads(time: number, glowOf: (s: QState) => number): void {
+    for (const s of states) {
+      if (s.members.length < 2) continue;
+      const [a, c] = s.members as [Token, Token];
+      const mx = (a.cx + c.cx) / 2;
+      const my = (a.cy + c.cy) / 2;
+      const dx = c.cx - a.cx;
+      const dy = c.cy - a.cy;
+      const bow = 0.14 * Math.sin(time * 0.25 + a.phase[0]!);
+      const qx = mx - dy * bow;
+      const qy = my + dx * bow;
+      const glow = glowOf(s);
+      const path = () => {
+        field.beginPath();
+        field.moveTo(a.cx, a.cy + 10);
+        field.quadraticCurveTo(qx, qy + 10, c.cx, c.cy + 10);
+      };
+
+      field.setLineDash([1, 9]);
+      field.lineDashOffset = -time * 5;
+      field.lineWidth = 1.2;
+      field.strokeStyle = css(light ? hues.g : ink);
+      field.globalAlpha = light ? 0.2 + 0.2 * s.m : 0.08;
+      path();
+      field.stroke();
+      field.setLineDash([]);
+
+      if (glow > 0.02) {
+        field.strokeStyle = css(light ? hues.b : pass);
+        field.globalAlpha = 0.4 * glow;
+        field.lineWidth = 1;
+        path();
+        field.stroke();
       }
     }
   }
 
-  function frame(now: number): void {
-    if (!hovering && now >= nextAutoAt) {
-      // The automatic measurement sweeps in from the left edge.
-      measure(-40, height * (0.3 + Math.random() * 0.4), now);
-      const reach = Math.hypot(width + 40, height) / WAVE_SPEED;
-      pendingReleaseAt = now + reach + HOLD_MS;
+  /* -- Loop -- */
+
+  let rafId = 0;
+  let running = false;
+  let visible = true;
+
+  function autoOrigin(): [number, number] {
+    const options: Array<[number, number]> = [
+      [-60, height * (0.5 + Math.random() * 0.4)],
+      [width + 60, height * (0.3 + Math.random() * 0.6)],
+      [width * (0.5 + Math.random() * 0.45), height + 60],
+      [width * (0.6 + Math.random() * 0.3), height * (0.45 + Math.random() * 0.3)],
+    ];
+    return options[Math.floor(Math.random() * options.length)]!;
+  }
+
+  function frame(): void {
+    // One clock for everything: the rAF timestamp and performance.now() are
+    // not guaranteed to share a base.
+    const now = clock();
+    if (now >= nextAutoAt) {
+      fireWave(...autoOrigin(), now);
       nextAutoAt = now + CYCLE_MS;
     }
-    if (!hovering && now >= pendingReleaseAt) {
-      release(now);
-      pendingReleaseAt = Infinity;
-    }
-    draw(now);
+    render(now);
     rafId = requestAnimationFrame(frame);
   }
 
   function start(): void {
     if (running || !visible || document.hidden || reducedMotion.matches) return;
     running = true;
+    lastFrame = clock();
     rafId = requestAnimationFrame(frame);
   }
 
@@ -468,36 +1204,26 @@ export function initHeroA(host: HTMLElement): () => void {
     return [event.clientX - box.left, event.clientY - box.top];
   };
 
-  const onPointerEnter = (event: PointerEvent) => {
+  const onPointerMove = (event: PointerEvent) => {
     if (event.pointerType !== "mouse" || reducedMotion.matches) return;
-    const now = performance.now();
-    hovering = true;
-    pendingReleaseAt = Infinity;
-    measure(...local(event), now);
+    [lens.x, lens.y] = local(event);
+    lens.active = true;
   };
 
   const onPointerLeave = (event: PointerEvent) => {
-    if (event.pointerType !== "mouse" || !hovering) return;
-    const now = performance.now();
-    hovering = false;
-    release(now);
-    nextAutoAt = Math.max(nextAutoAt, now + CYCLE_MS * 0.6);
+    if (event.pointerType !== "mouse") return;
+    lens.active = false;
   };
 
-  // A tap on a touch screen is a one-off measurement from where it landed.
-  const onPointerDown = (event: PointerEvent) => {
-    if (event.pointerType === "mouse" || reducedMotion.matches) return;
-    const now = performance.now();
-    measure(...local(event), now);
-    pendingReleaseAt = now + HOLD_MS + 600;
-    nextAutoAt = now + CYCLE_MS;
-  };
-
-  host.addEventListener("pointerenter", onPointerEnter);
+  host.addEventListener("pointermove", onPointerMove);
+  host.addEventListener("pointerenter", onPointerMove);
   host.addEventListener("pointerleave", onPointerLeave);
-  host.addEventListener("pointerdown", onPointerDown);
 
-  const resizeObserver = new ResizeObserver(() => resize());
+  let resizeQueued = 0;
+  const resizeObserver = new ResizeObserver(() => {
+    cancelAnimationFrame(resizeQueued);
+    resizeQueued = requestAnimationFrame(() => resize());
+  });
   resizeObserver.observe(host);
 
   const intersectionObserver = new IntersectionObserver(
@@ -516,14 +1242,14 @@ export function initHeroA(host: HTMLElement): () => void {
   const onReducedMotionChange = () => {
     if (reducedMotion.matches) {
       stop();
-      draw(performance.now());
+      render(clock());
     } else {
       start();
     }
   };
   reducedMotion.addEventListener?.("change", onReducedMotionChange);
 
-  // Headline fonts can shift the line boxes the layout avoids.
+  // Headline fonts can move the line boxes the layout keeps clear of.
   document.fonts?.ready.then(() => resize()).catch(() => {});
 
   resize();
@@ -531,12 +1257,16 @@ export function initHeroA(host: HTMLElement): () => void {
 
   return function destroy(): void {
     stop();
+    cancelAnimationFrame(resizeQueued);
     resizeObserver.disconnect();
     intersectionObserver.disconnect();
     document.removeEventListener("visibilitychange", onVisibilityChange);
-    host.removeEventListener("pointerenter", onPointerEnter);
+    host.removeEventListener("pointermove", onPointerMove);
+    host.removeEventListener("pointerenter", onPointerMove);
     host.removeEventListener("pointerleave", onPointerLeave);
-    host.removeEventListener("pointerdown", onPointerDown);
     reducedMotion.removeEventListener?.("change", onReducedMotionChange);
+    light?.destroy();
+    light = null;
+    sprites.clear();
   };
 }
